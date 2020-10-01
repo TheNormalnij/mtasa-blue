@@ -251,7 +251,7 @@ public:
     float                               fSteeringAngle;
     CVehicleModelVisualInfoSAInterface* pVisualInfo;            // +92
     char                                pad3[464];
-    char                                pDirtMaterial[8]; // *RwMaterial
+    char                                pDirtMaterial[64]; // *RwMaterial
     char                                pad4[64];
     char                                primColors[8];
     char                                secondColors[8];
@@ -263,8 +263,8 @@ public:
     unsigned char                       ucSecColor;
     unsigned char                       ucTertColor;
     unsigned char                       ucQuatColor;
-    char                                upgrades[18];
-    unsigned int                        anRemapTXDs;
+    char                                upgrades[36];
+    char                                anRemapTXDs[8];
     char                                pad5[2];
     char                                pAnimBlock[4];
 };

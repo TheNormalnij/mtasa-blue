@@ -231,8 +231,8 @@ BOOL CModelInfoSA::IsTrailer()
 
 BOOL CModelInfoSA::IsVehicle()
 {
-    /*
     DEBUG_TRACE("BOOL CModelInfoSA::IsVehicle ( )");
+    // This function will return a vehicle type for vehicles or 0xFF on failure
     DWORD dwFunction = FUNC_IsVehicleModelType;
     DWORD ModelID = m_dwModelID;
     BYTE bReturn = 0;
@@ -243,11 +243,7 @@ BOOL CModelInfoSA::IsVehicle()
         mov     bReturn, al
         add     esp, 4
     }
-    return (BOOL)bReturn;
-    */
-
-    // Above doesn't seem to work
-    return (m_dwModelID >= 400 && m_dwModelID <= 611) || m_dwModelID == 3;
+    return bReturn != 0xFF;
 }
 
 bool CModelInfoSA::IsPlayerModel()

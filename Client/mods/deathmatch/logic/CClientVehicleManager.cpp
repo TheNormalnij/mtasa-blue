@@ -422,7 +422,8 @@ bool CClientVehicleManager::IsTrainModel(unsigned long ulModel)
 
 bool CClientVehicleManager::IsValidModel(unsigned long ulModel)
 {
-    return ulModel >= 400 && ulModel <= 611 || true;
+    CModelInfo* pModelInfo = g_pGame->GetModelInfo(ulModel);
+    return pModelInfo && pModelInfo->IsVehicle();
 }
 
 bool CClientVehicleManager::IsStandartModel(unsigned long ulModel)
