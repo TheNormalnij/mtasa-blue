@@ -99,6 +99,27 @@ bool CClientModel::Deallocate(void)
                 }
             }
         }
+        else if (m_eModelType == eClientModelType::VEHICLE_AUTOMOBILE)
+        {
+            CClientVehicleManager* pVehicleManager = g_pClientGame->GetManager()->GetVehicleManager();
+            for (auto iter = pVehicleManager->IterBegin(); iter != pVehicleManager->IterEnd(); iter++)
+            {
+                CClientVehicle* pVehicle = *iter;
+                if (pVehicle->GetModel() == m_iModelID)
+                {
+                    if (pVehicle->IsStreamedIn())
+                    {
+                        pVehicle->StreamOutForABit();
+                    }
+                    pVehicle->SetModelBlocking(400, 255, 255);
+
+                    CLuaArguments Arguments;
+                    Arguments.PushNumber(m_iModelID);
+                    Arguments.PushNumber(400);
+                    pVehicle->CallEvent("onClientElementModelChange", Arguments, true);
+                }
+            }
+        }
 
         // Restore DFF/TXD
         g_pClientGame->GetManager()->GetDFFManager()->RestoreModel(m_iModelID);
