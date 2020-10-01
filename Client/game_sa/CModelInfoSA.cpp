@@ -1322,15 +1322,15 @@ void CModelInfoSA::SetVoice(const char* szVoiceType, const char* szVoice)
 void CModelInfoSA::CopyStreamingInfoFromModel(ushort usBaseModelID)
 {
     CStreamingInfo* pBaseModelStreamigInfo = pGame->GetStreaming()->GetStreamingInfoFromModelId(usBaseModelID);
-    CStreamingInfo* pTargetModelStreamigInfo = pGame->GetStreaming()->GetStreamingInfoFromModelId(m_dwModelID);
+    CStreamingInfo* pTargetModelStreamingInfo = pGame->GetStreaming()->GetStreamingInfoFromModelId(m_dwModelID);
 
-    pTargetModelStreamigInfo->loadState = 0;
-    pTargetModelStreamigInfo->nextInImg = -1;
-    pTargetModelStreamigInfo->nextId = -1;
-    pTargetModelStreamigInfo->prevId = -1;
-    pTargetModelStreamigInfo->archiveId = pBaseModelStreamigInfo->archiveId;
-    pTargetModelStreamigInfo->offsetInBlocks = pBaseModelStreamigInfo->offsetInBlocks;
-    pTargetModelStreamigInfo->sizeInBlocks = pBaseModelStreamigInfo->sizeInBlocks;
+    pTargetModelStreamingInfo->loadState = 0;
+    pTargetModelStreamingInfo->nextInImg = -1;
+    pTargetModelStreamingInfo->nextId = -1;
+    pTargetModelStreamingInfo->prevId = -1;
+    pTargetModelStreamingInfo->archiveId = pBaseModelStreamigInfo->archiveId;
+    pTargetModelStreamingInfo->offsetInBlocks = pBaseModelStreamigInfo->offsetInBlocks;
+    pTargetModelStreamingInfo->sizeInBlocks = pBaseModelStreamigInfo->sizeInBlocks;
 }
 
 void CModelInfoSA::MakePedModel(char* szTexture)
