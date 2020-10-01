@@ -511,7 +511,12 @@ bool CModelInfoSA::IsValid()
 {
     if (m_dwModelID >= 20000 && m_dwModelID < MODELINFO_MAX)
         return true;
-    return ppModelInfo[m_dwModelID] != 0 && pGame->GetStreaming()->GetStreamingInfoFromModelId(m_dwModelID)->sizeInBlocks;
+
+    if (ppModelInfo[m_dwModelID] == nullptr)
+        return false;
+
+    auto sizeInBlocks = pGame->GetStreaming()->GetStreamingInfoFromModelId(m_dwModelID)->sizeInBlocks;
+    return sizeInBlocks > 0;
 }
 
 float CModelInfoSA::GetDistanceFromCentreOfMassToBaseOfModel()
@@ -1374,16 +1379,16 @@ void CModelInfoSA::DeallocateModel(void)
 {
     Remove();
     ppModelInfo[m_dwModelID] = nullptr;
-    CStreamingInfo* pModelStreamigInfo = pGame->GetStreaming()->GetStreamingInfoFromModelId(m_dwModelID);
+    CStreamingInfo* pModelStreamingInfo = pGame->GetStreaming()->GetStreamingInfoFromModelId(m_dwModelID);
 
-    pModelStreamigInfo->loadState = 0;
-    pModelStreamigInfo->nextInImg = -1;
-    pModelStreamigInfo->nextId = -1;
-    pModelStreamigInfo->prevId = -1;
-    pModelStreamigInfo->archiveId = 0;
-    pModelStreamigInfo->flg= 0;
-    pModelStreamigInfo->offsetInBlocks = 0;
-    pModelStreamigInfo->sizeInBlocks = 0;
+    pModelStreamingInfo->loadState = 0;
+    pModelStreamingInfo->nextInImg = -1;
+    pModelStreamingInfo->nextId = -1;
+    pModelStreamingInfo->prevId = -1;
+    pModelStreamingInfo->archiveId = 0;
+    pModelStreamingInfo->flg = 0;
+    pModelStreamingInfo->offsetInBlocks = 0;
+    pModelStreamingInfo->sizeInBlocks = 0;
 }
 //////////////////////////////////////////////////////////////////////////////////////////
 //
