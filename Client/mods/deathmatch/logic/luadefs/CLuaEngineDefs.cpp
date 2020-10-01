@@ -581,6 +581,8 @@ int CLuaEngineDefs::EngineRequestModel(lua_State* luaVM)
                 }
                 else if (strModelType == "object")
                     eModelType = eClientModelType::OBJECT;
+                else if (strModelType == "vehicle-automobile")
+                    eModelType = eClientModelType::VEHICLE_AUTOMOBILE;
                 else
                 {
                     lua_pushboolean(luaVM, false);

@@ -45,6 +45,9 @@ bool CClientModel::Allocate(void)
             case eClientModelType::OBJECT:
                 pModelInfo->MakeObjectModel(1337);
                 break;
+            case eClientModelType::VEHICLE_AUTOMOBILE:
+                pModelInfo->MakeVehicleAutomobile(400);
+                break;
             default:
                 return false;
         }

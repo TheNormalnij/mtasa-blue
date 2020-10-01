@@ -247,7 +247,7 @@ BOOL CModelInfoSA::IsVehicle()
     */
 
     // Above doesn't seem to work
-    return m_dwModelID >= 400 && m_dwModelID <= 611;
+    return (m_dwModelID >= 400 && m_dwModelID <= 611) || m_dwModelID == 3;
 }
 
 bool CModelInfoSA::IsPlayerModel()
@@ -1319,12 +1319,25 @@ void CModelInfoSA::SetVoice(const char* szVoiceType, const char* szVoice)
     SetVoice(sVoiceType, sVoiceID);
 }
 
+void CModelInfoSA::CopyStreamingInfoFromModel(ushort usBaseModelID)
+{
+    CStreamingInfo* pBaseModelStreamigInfo = pGame->GetStreaming()->GetStreamingInfoFromModelId(usBaseModelID);
+    CStreamingInfo* pTargetModelStreamigInfo = pGame->GetStreaming()->GetStreamingInfoFromModelId(m_dwModelID);
+
+    pTargetModelStreamigInfo->loadState = 0;
+    pTargetModelStreamigInfo->nextInImg = -1;
+    pTargetModelStreamigInfo->nextId = -1;
+    pTargetModelStreamigInfo->prevId = -1;
+    pTargetModelStreamigInfo->archiveId = pBaseModelStreamigInfo->archiveId;
+    pTargetModelStreamigInfo->offsetInBlocks = pBaseModelStreamigInfo->offsetInBlocks;
+    pTargetModelStreamigInfo->sizeInBlocks = pBaseModelStreamigInfo->sizeInBlocks;
+}
+
 void CModelInfoSA::MakePedModel(char* szTexture)
 {
     // Create a new CPedModelInfo
     CPedModelInfoSA pedModelInfo;
     ppModelInfo[m_dwModelID] = (CBaseModelInfoSAInterface*)pedModelInfo.GetPedModelInfoInterface();
-
     // Load our texture
     pGame->GetStreaming()->RequestSpecialModel(m_dwModelID, szTexture, 0);
 }
@@ -1342,16 +1355,24 @@ void CModelInfoSA::MakeObjectModel(ushort usBaseID)
 
     ppModelInfo[m_dwModelID] = m_pInterface;
 
-    CStreamingInfo* pBaseModelStreamigInfo = pGame->GetStreaming()->GetStreamingInfoFromModelId(usBaseID);
-    CStreamingInfo* pTargetModelStreamigInfo = pGame->GetStreaming()->GetStreamingInfoFromModelId(m_dwModelID);
+    CopyStreamingInfoFromModel(usBaseID);
+}
 
-    pTargetModelStreamigInfo->loadState = 0;
-    pTargetModelStreamigInfo->nextInImg = -1;
-    pTargetModelStreamigInfo->nextId = -1;
-    pTargetModelStreamigInfo->prevId = -1;
-    pTargetModelStreamigInfo->archiveId = pBaseModelStreamigInfo->archiveId;
-    pTargetModelStreamigInfo->offsetInBlocks = pBaseModelStreamigInfo->offsetInBlocks;
-    pTargetModelStreamigInfo->sizeInBlocks = pBaseModelStreamigInfo->sizeInBlocks;
+void CModelInfoSA::MakeVehicleAutomobile(ushort usBaseID)
+{
+    CVehicleModelInfoSAInterface* m_pInterface = new CVehicleModelInfoSAInterface();
+
+    CBaseModelInfoSAInterface* pBaseObjectInfo = (CBaseModelInfoSAInterface*)ppModelInfo[usBaseID];
+    MemCpyFast(m_pInterface, pBaseObjectInfo, sizeof(CVehicleModelInfoSAInterface));
+    m_pInterface->usNumberOfRefs = 0;
+    m_pInterface->pRwObject = nullptr;
+    m_pInterface->pVisualInfo = nullptr;
+    m_pInterface->usUnknown = 65535;
+    m_pInterface->usDynamicIndex = 65535;
+
+    ppModelInfo[m_dwModelID] = m_pInterface;
+
+    CopyStreamingInfoFromModel(usBaseID);
 }
 
 void CModelInfoSA::DeallocateModel(void)

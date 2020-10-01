@@ -41,6 +41,8 @@ CClientVehicle::CClientVehicle(CClientManager* pManager, ElementID ID, unsigned 
     m_pUpgrades = new CVehicleUpgrades(this);
     m_pClump = NULL;
     m_pOriginalHandlingEntry = g_pGame->GetHandlingManager()->GetOriginalHandlingData(static_cast<eVehicleTypes>(usModel));
+    if (!m_pOriginalHandlingEntry)
+        m_pOriginalHandlingEntry = g_pGame->GetHandlingManager()->GetOriginalHandlingData(static_cast<eVehicleTypes>(400));
     m_pHandlingEntry = g_pGame->GetHandlingManager()->CreateHandlingData();
     m_pHandlingEntry->Assign(m_pOriginalHandlingEntry);
 
@@ -1062,6 +1064,8 @@ void CClientVehicle::SetModelBlocking(unsigned short usModel, unsigned char ucVa
 
         // Reset handling to fit the vehicle
         m_pOriginalHandlingEntry = g_pGame->GetHandlingManager()->GetOriginalHandlingData((eVehicleTypes)usModel);
+        if (!m_pOriginalHandlingEntry)
+            m_pOriginalHandlingEntry = g_pGame->GetHandlingManager()->GetOriginalHandlingData((eVehicleTypes)400);
         m_pHandlingEntry->Assign(m_pOriginalHandlingEntry);
         ApplyHandling();
 

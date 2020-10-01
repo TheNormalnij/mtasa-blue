@@ -189,7 +189,8 @@ public:
     virtual void      MakeCustomModel() = 0;
     virtual RwObject* GetRwObject() = 0;
     virtual void      MakePedModel(char* szTexture) = 0;
-    virtual void      MakeObjectModel(ushort usBaseID) = 0;
+    virtual void      MakeObjectModel(unsigned short usBaseID) = 0;
+    virtual void      MakeVehicleAutomobile(unsigned short usBaseID) = 0;
 
     virtual SVehicleSupportedUpgrades GetVehicleSupportedUpgrades() = 0;
     virtual void                      ResetSupportedUpgrades() = 0;

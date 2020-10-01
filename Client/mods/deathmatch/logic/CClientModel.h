@@ -19,6 +19,7 @@ enum class eClientModelType
 {
     PED,
     OBJECT,
+    VEHICLE_AUTOMOBILE,
 };
 
 class CClientModel
