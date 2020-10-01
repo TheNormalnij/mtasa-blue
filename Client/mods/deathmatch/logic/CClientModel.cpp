@@ -80,15 +80,19 @@ bool CClientModel::Deallocate(void)
                         pPed->StreamOutForABit();
                     }
                     pPed->SetModel(0);
+
+                    CLuaArguments Arguments;
+                    Arguments.PushNumber(m_iModelID);
+                    Arguments.PushNumber(0);
+                    pPed->CallEvent("onClientElementModelChange", Arguments, true);
                 }
             }
         }
         else if (m_eModelType == eClientModelType::OBJECT)
         {
             CClientObjectManager* pObjectManager = g_pClientGame->GetManager()->GetObjectManager();
-            for (auto iter = pObjectManager->IterBegin(); iter != pObjectManager->IterEnd(); iter++)
+            for (auto* pObject : pObjectManager->GetObjects())
             {
-                CClientObject* pObject = *iter;
                 if (pObject->GetModel() == m_iModelID)
                 {
                     if (pObject->IsStreamedIn())
@@ -96,6 +100,11 @@ bool CClientModel::Deallocate(void)
                         pObject->StreamOutForABit();
                     }
                     pObject->SetModel(1337);
+
+                    CLuaArguments Arguments;
+                    Arguments.PushNumber(m_iModelID);
+                    Arguments.PushNumber(1337);
+                    pObject->CallEvent("onClientElementModelChange", Arguments, true);
                 }
             }
         }
