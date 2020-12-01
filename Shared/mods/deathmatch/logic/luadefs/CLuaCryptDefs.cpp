@@ -264,7 +264,9 @@ int CLuaCryptDefs::EncodeString(lua_State* luaVM)
     CScriptArgReader argStream(luaVM);
     argStream.ReadEnumString(algorithm);
     argStream.ReadString(data);
-    argStream.ReadStringMap(options);
+
+    if (argStream.NextIsTable())
+        argStream.ReadStringMap(options);
 
     argStream.ReadFunction(luaFunctionRef, LUA_REFNIL);
     argStream.ReadFunctionComplete();
@@ -275,6 +277,13 @@ int CLuaCryptDefs::EncodeString(lua_State* luaVM)
         {
             case StringEncryptFunction::TEA:
             {
+                if (options.size() == 0)
+                {
+                    m_pScriptDebugging->LogCustom(luaVM, "This algorithm requests options table");
+                    lua_pushboolean(luaVM, false);
+                    return 1;
+                }
+
                 SString& key = options["key"];
 
                 if (key.empty())
@@ -409,7 +418,9 @@ int CLuaCryptDefs::DecodeString(lua_State* luaVM)
     CScriptArgReader argStream(luaVM);
     argStream.ReadEnumString(algorithm);
     argStream.ReadString(data);
-    argStream.ReadStringMap(options);
+
+    if (argStream.NextIsTable())
+        argStream.ReadStringMap(options);
 
     argStream.ReadFunction(luaFunctionRef, LUA_REFNIL);
     argStream.ReadFunctionComplete();
@@ -420,6 +431,13 @@ int CLuaCryptDefs::DecodeString(lua_State* luaVM)
         {
             case StringEncryptFunction::TEA:
             {
+                if (options.size() == 0)
+                {
+                    m_pScriptDebugging->LogCustom(luaVM, "This algorithm requests options table");
+                    lua_pushboolean(luaVM, false);
+                    return 1;
+                }
+
                 SString& key = options["key"];
 
                 if (key.empty())
