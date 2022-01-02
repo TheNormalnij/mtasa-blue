@@ -1,12 +1,13 @@
 #include "EffekseerMaterialCompilerDX9.h"
 #include "../DirectX/ShaderGenerator.h"
 
-#include <d3d11.h>
+//#include <d3d11.h>
 #include <d3d9.h>
-#include <d3dcompiler.h>
+//#include <d3dcompiler.h>
+#include <D3DX9Effect.h>
 #include <iostream>
 
-#pragma comment(lib, "d3dcompiler.lib")
+//#pragma comment(lib, "d3dcompiler.lib")
 
 #undef min
 
@@ -15,32 +16,30 @@ namespace Effekseer
 namespace DX9
 {
 
-static ID3DBlob* CompileVertexShader(const char* vertexShaderText,
+static LPD3DXBUFFER CompileVertexShader(const char* vertexShaderText,
 									 const char* vertexShaderFileName,
-									 const std::vector<D3D_SHADER_MACRO>& macro,
 									 std::string& log)
 {
-	ID3DBlob* shader = nullptr;
-	ID3DBlob* error = nullptr;
+    LPD3DXBUFFER* shader = nullptr;
+    LPD3DXBUFFER* error = nullptr;
 
-	UINT flag = D3D10_SHADER_PACK_MATRIX_COLUMN_MAJOR;
+	UINT flag = 0;
 #if !_DEBUG
-	flag = flag | D3D10_SHADER_OPTIMIZATION_LEVEL3;
+    flag = flag | D3DXSHADER_OPTIMIZATION_LEVEL3;
 #endif
 
 	HRESULT hr;
 
-	hr = D3DCompile(vertexShaderText,
+	hr = D3DXCompileShader(vertexShaderText,
 					strlen(vertexShaderText),
-					vertexShaderFileName,
-					macro.size() > 0 ? (D3D_SHADER_MACRO*)&macro[0] : nullptr,
+					nullptr,
 					nullptr,
 					"main",
 					"vs_3_0",
 					flag,
-					0,
-					&shader,
-					&error);
+					shader,
+					error,
+					nullptr);
 
 	if (FAILED(hr))
 	{
@@ -55,42 +54,40 @@ static ID3DBlob* CompileVertexShader(const char* vertexShaderText,
 
 		if (error != nullptr)
 		{
-			log += (const char*)error->GetBufferPointer();
-			error->Release();
+            log += (const char*)((*error)->GetBufferPointer());
+            (*error)->Release();
 		}
 
-		ES_SAFE_RELEASE(shader);
+		ES_SAFE_RELEASE(*shader);
 		return nullptr;
 	}
 
-	return shader;
+	return *shader;
 }
 
-static ID3DBlob* CompilePixelShader(const char* vertexShaderText,
+static LPD3DXBUFFER CompilePixelShader(const char* vertexShaderText,
 									const char* vertexShaderFileName,
-									const std::vector<D3D_SHADER_MACRO>& macro,
 									std::string& log)
 {
-	ID3DBlob* shader = nullptr;
-	ID3DBlob* error = nullptr;
-	UINT flag = D3D10_SHADER_PACK_MATRIX_COLUMN_MAJOR;
+    LPD3DXBUFFER* shader = nullptr;
+    LPD3DXBUFFER* error = nullptr;
+	UINT flag = 0;
 #if !_DEBUG
-	flag = flag | D3D10_SHADER_OPTIMIZATION_LEVEL3;
+    flag = flag | D3DXSHADER_OPTIMIZATION_LEVEL3;
 #endif
 
 	HRESULT hr;
 
-	hr = D3DCompile(vertexShaderText,
+	hr = D3DXCompileShader(vertexShaderText,
 					strlen(vertexShaderText),
-					vertexShaderFileName,
-					macro.size() > 0 ? (D3D_SHADER_MACRO*)&macro[0] : nullptr,
+					nullptr,
 					nullptr,
 					"main",
 					"ps_3_0",
 					flag,
-					0,
-					&shader,
-					&error);
+					shader,
+					error,
+					nullptr);
 
 	if (FAILED(hr))
 	{
@@ -105,15 +102,15 @@ static ID3DBlob* CompilePixelShader(const char* vertexShaderText,
 
 		if (error != nullptr)
 		{
-			log += (const char*)error->GetBufferPointer();
-			error->Release();
+			log += (const char*)(*error)->GetBufferPointer();
+            (*error)->Release();
 		}
 
-		ES_SAFE_RELEASE(shader);
+		ES_SAFE_RELEASE(*shader);
 		return nullptr;
 	}
 
-	return shader;
+	return *shader;
 }
 
 #define _DIRECTX9 1
@@ -198,9 +195,8 @@ CompiledMaterialBinary* MaterialCompilerDX9::Compile(MaterialFile* materialFile,
 		std::vector<uint8_t> ret;
 
 		std::string log;
-		std::vector<D3D_SHADER_MACRO> macros;
 
-		auto blob = DX9::CompileVertexShader(str.c_str(), "VS", macros, log);
+		auto blob = DX9::CompileVertexShader(str.c_str(), "VS", log);
 
 		if (blob != nullptr)
 		{
@@ -222,9 +218,8 @@ CompiledMaterialBinary* MaterialCompilerDX9::Compile(MaterialFile* materialFile,
 		std::vector<uint8_t> ret;
 
 		std::string log;
-		std::vector<D3D_SHADER_MACRO> macros;
 
-		auto blob = DX9::CompilePixelShader(str.c_str(), "PS", macros, log);
+		auto blob = DX9::CompilePixelShader(str.c_str(), "PS", log);
 
 		if (blob != nullptr)
 		{
