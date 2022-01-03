@@ -100,6 +100,7 @@ class CGraphicsInterface
 {
 public:
     virtual IDirect3DDevice9* GetDevice() = 0;
+    virtual void ApplyEffeksierRenderStates() = 0;
 
     virtual void CalcWorldCoors(CVector* vecScreen, CVector* vecWorld) = 0;
     virtual void CalcScreenCoors(CVector* vecWorld, CVector* vecScreen) = 0;

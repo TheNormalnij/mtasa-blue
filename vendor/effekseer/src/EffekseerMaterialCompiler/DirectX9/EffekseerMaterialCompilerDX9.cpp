@@ -62,6 +62,9 @@ static LPD3DXBUFFER CompileVertexShader(const char* vertexShaderText,
 		return nullptr;
 	}
 
+	if (shader == nullptr)
+        return nullptr;
+
 	return *shader;
 }
 
@@ -109,6 +112,9 @@ static LPD3DXBUFFER CompilePixelShader(const char* vertexShaderText,
 		ES_SAFE_RELEASE(*shader);
 		return nullptr;
 	}
+
+	if (shader == nullptr)
+        return nullptr;
 
 	return *shader;
 }

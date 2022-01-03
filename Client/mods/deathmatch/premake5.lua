@@ -45,7 +45,8 @@ project "Client Deathmatch"
 			"../../../Shared/animation",
 			"../../../vendor/sparsehash/src/",
 			"../../../vendor/lunasvg/include",
-			"../../../vendor/effekseer/src/include"
+			"../../../vendor/effekseer/src/include",
+			"../../../vendor/effekseer/src/Effekseer",
 	}
 
 	files {

@@ -3,11 +3,13 @@ project "effekseer"
 	kind "StaticLib"
 	targetname "effekseer"
 
-	defines { "WIN32", "_WIN32", "_WIN32_WINNT=0x601", "_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion)" }
+	defines { "WIN32", "_WIN32", "_WIN32_WINNT=0x601", "_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion)", "__EFFEKSEER_USE_LIBPNG__", "__EFFEKSEER_RENDERER_INTERNAL_LOADER__" }
+	links { "libpng", "zlib", "d3dx9", "d3d9" }
 
 	includedirs {
 		"src/include",
 		"src/Effekseer",
+		"../libpng"
 	}
 
 	vpaths {
@@ -17,15 +19,13 @@ project "effekseer"
 		["*"] = "premake5.lua"
 	}
 
-	links {
-		"d3dx9", "d3d9"
-	}
-
 	files {
 		"premake5.lua",
 		"*.h",
 		"src/Effekseer/**.cpp",
 		"src/Effekseer/**.h",
+		"src/EffekseerRendererCommon/**.cpp",
+		"src/EffekseerRendererCommon/**.h",
 		"src/EffekseerRendererDX9/**.cpp",
 		"src/EffekseerRendererDX9/**.h",
 		"src/EffekseerMaterialCompiler/**.cpp",

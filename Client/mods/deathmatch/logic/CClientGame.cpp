@@ -177,6 +177,7 @@ CClientGame::CClientGame(bool bLocalPlay) : m_ServerInfo(new CServerInfo())
     m_pGUIManager = m_pManager->GetGUIManager();
     m_pResourceManager = m_pManager->GetResourceManager();
     m_pProjectileManager = m_pManager->GetProjectileManager();
+    m_pEffekseerManager = m_pManager->GetEffekseerManager();
     m_pLocalServer = NULL;
 
     m_pLatentTransferManager = new CLatentTransferManager();
@@ -1145,6 +1146,9 @@ void CClientGame::DoPulses()
 
         // Respawn objects in respawn pool
         m_ObjectRespawner.DoRespawnAll();
+
+        // Update fx
+        //m_pEffekseerManager->DoPulse();
     }
 
     // Are we connecting?
@@ -3441,6 +3445,7 @@ void CClientGame::StaticPostWorldProcessPedsAfterPreRenderHandler()
 
 void CClientGame::StaticPreFxRenderHandler()
 {
+    g_pClientGame->GetManager()->GetEffekseerManager()->Render();
     g_pCore->OnPreFxRender();
 }
 

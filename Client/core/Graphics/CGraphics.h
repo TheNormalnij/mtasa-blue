@@ -76,6 +76,7 @@ public:
 
     // DirectX misc. functions
     IDirect3DDevice9* GetDevice() { return m_pDevice; };
+    void              ApplyEffeksierRenderStates();
 
     // Transformation functions
     void CalcWorldCoors(CVector* vecScreen, CVector* vecWorld);
