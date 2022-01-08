@@ -29,6 +29,11 @@ public:
     void              SetRotation(const CVector& vecRotation);
     void              SetScale(const CVector& vecScale);
     void              Stop();
+    void              StopRoot();
+    void              SetSpeed(float fSpeed);
+    float             GetSpeed();
+    void              SetDynamicInput(int32_t index, float fValue);
+    float             GetDynamicInput(int32_t index);
 
 private:
     CVector              m_vecPosition;

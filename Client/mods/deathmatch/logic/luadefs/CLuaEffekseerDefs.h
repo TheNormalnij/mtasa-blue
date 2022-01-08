@@ -18,4 +18,9 @@ public:
 
     static CClientEffekseerEffect*        loadEffekseerFx(lua_State* const luaVM, std::string strPath);
     static CClientEffekseerEffectHandler* playEffekseerFx(CClientEffekseerEffect* pEffect, CVector vecPos);
+    static bool                           setEffekseerFxSpeed(CClientEffekseerEffectHandler* handle, float fSpeed);
+    static float                          getEffekseerFxSpeed(CClientEffekseerEffectHandler* handle);
+    static bool                           setEffekseerFxScale(CClientEffekseerEffectHandler* handle, CVector vecScale);
+    static bool                           setEffekseedFxInput(CClientEffekseerEffectHandler* handle, int32_t index, float fValue);
+    static float                          getEffekseedFxInput(CClientEffekseerEffectHandler* handle, int32_t index);
 };

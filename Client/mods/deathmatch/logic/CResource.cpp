@@ -68,6 +68,11 @@ CResource::CResource(unsigned short usNetID, const char* szResourceName, CClient
     m_pResourceIFPRoot = new CClientDummy(g_pClientGame->GetManager(), INVALID_ELEMENT_ID, "ifproot");
     m_pResourceIFPRoot->MakeSystemEntity();
 
+    // Create our Effekseer root element. We set its parent when we're loaded.
+    // Make it a system entity so nothing but us can delete it.
+    m_pResourceEffekseerRoot = new CClientDummy(g_pClientGame->GetManager(), INVALID_ELEMENT_ID, "effekseerroot");
+    m_pResourceEffekseerRoot->MakeSystemEntity();
+
     m_strResourceDirectoryPath = SString("%s/resources/%s", g_pClientGame->GetFileCacheRoot(), *m_strResourceName);
     m_strResourcePrivateDirectoryPath = PathJoin(CServerIdManager::GetSingleton()->GetConnectionPrivateDirectory(), m_strResourceName);
 
@@ -107,6 +112,10 @@ CResource::~CResource()
     // Remove all keybinds on this VM
     g_pClientGame->GetScriptKeyBinds()->RemoveAllKeys(m_pLuaVM);
     g_pCore->GetKeyBinds()->SetAllCommandsActive(m_strResourceName, false);
+
+    // Destroy all loaded custom fx
+    g_pClientGame->GetElementDeleter()->DeleteRecursive(m_pResourceEffekseerRoot);
+    m_pResourceEffekseerRoot = NULL;
 
     // Destroy the txd root so all dff elements are deleted except those moved out
     g_pClientGame->GetElementDeleter()->DeleteRecursive(m_pResourceTXDRoot);

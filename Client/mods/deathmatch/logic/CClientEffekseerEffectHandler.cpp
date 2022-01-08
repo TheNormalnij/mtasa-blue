@@ -44,3 +44,28 @@ void CClientEffekseerEffectHandler::Stop()
 {
     m_pInternalManager->StopEffect(m_Handle);
 }
+
+void CClientEffekseerEffectHandler::StopRoot()
+{
+    m_pInternalManager->StopRoot(m_Handle);
+}
+
+void CClientEffekseerEffectHandler::SetSpeed(float fSpeed)
+{
+    m_pInternalManager->SetSpeed(m_Handle, fSpeed);
+}
+
+float CClientEffekseerEffectHandler::GetSpeed()
+{
+    return m_pInternalManager->GetSpeed(m_Handle);
+}
+
+void CClientEffekseerEffectHandler::SetDynamicInput(int32_t index, float fValue)
+{
+    m_pInternalManager->SetDynamicInput(m_Handle, index, fValue);
+}
+
+float CClientEffekseerEffectHandler::GetDynamicInput(int32_t index)
+{
+    return m_pInternalManager->GetDynamicInput(m_Handle, index);
+}
