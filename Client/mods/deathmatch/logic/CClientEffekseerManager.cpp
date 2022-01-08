@@ -22,6 +22,7 @@ CClientEffekseerManager::CClientEffekseerManager(CClientManager* pManager)
     auto pDevice = g_pCore->GetGraphics()->GetDevice();
 
     m_pRenderer = ::EffekseerRendererDX9::Renderer::Create(pDevice, EFK_MAX_PARTICLES);
+    m_pRenderer->SetRestorationOfStatesFlag(false);
 
     m_pManagerInternal->SetSpriteRenderer(m_pRenderer->CreateSpriteRenderer());
     m_pManagerInternal->SetRibbonRenderer(m_pRenderer->CreateRibbonRenderer());
@@ -99,7 +100,12 @@ void CClientEffekseerManager::Render()
     m_pManagerInternal->Update();
 
     m_pRenderer->BeginRendering();
-    g_pCore->GetGraphics()->ApplyEffeksierRenderStates();
+
+    pDevice->SetRenderState(D3DRS_CLIPPING, TRUE);
+    pDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
+    pDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
+    pDevice->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+
     m_pManagerInternal->Draw();
     m_pRenderer->EndRendering();
 
