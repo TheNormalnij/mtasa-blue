@@ -1877,12 +1877,13 @@ void CCore::OnPreFxRender()
     if (CGraphics::GetSingleton().HasPrimitive3DPreGUIQueueItems())
         CGraphics::GetSingleton().DrawPrimitive3DPreGUIQueue();
 
-    if (!CGraphics::GetSingleton().HasLine3DPreGUIQueueItems())
-        return;
 
     CGraphics::GetSingleton().EnteringMTARenderZone();
 
-    CGraphics::GetSingleton().DrawLine3DPreGUIQueue();
+    if (CGraphics::GetSingleton().HasLine3DPreGUIQueueItems())
+        CGraphics::GetSingleton().DrawLine3DPreGUIQueue();
+
+    CGraphics::GetSingleton().DrawEffekseerEffects();
 
     CGraphics::GetSingleton().LeavingMTARenderZone();
 }

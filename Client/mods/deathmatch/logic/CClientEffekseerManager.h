@@ -25,7 +25,6 @@ class CClientEffekseerManager
 public:
     void DeleteAll();
 
-    void                    Render();
     CClientEffekseerEffect* Get(ElementID ID);
     Effekseer::ManagerRef   GetInternalManager() { return m_pManagerInternal; };
 

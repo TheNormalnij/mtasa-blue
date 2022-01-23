@@ -17,25 +17,6 @@ CClientEffekseerManager::CClientEffekseerManager(CClientManager* pManager)
     m_pManager = pManager;
     m_bCanRemoveFromList = true;
     m_pManagerInternal = ::Effekseer::Manager::Create(EFK_MAX_PARTICLES);
-
-    // Init render
-    auto pDevice = g_pCore->GetGraphics()->GetDevice();
-
-    m_pRenderer = ::EffekseerRendererDX9::Renderer::Create(pDevice, EFK_MAX_PARTICLES);
-    m_pRenderer->SetRestorationOfStatesFlag(false);
-
-    m_pManagerInternal->SetSpriteRenderer(m_pRenderer->CreateSpriteRenderer());
-    m_pManagerInternal->SetRibbonRenderer(m_pRenderer->CreateRibbonRenderer());
-    m_pManagerInternal->SetRingRenderer(m_pRenderer->CreateRingRenderer());
-    m_pManagerInternal->SetTrackRenderer(m_pRenderer->CreateTrackRenderer());
-    m_pManagerInternal->SetModelRenderer(m_pRenderer->CreateModelRenderer());
-
-    // Create loaders
-    m_pManagerInternal->SetTextureLoader(m_pRenderer->CreateTextureLoader());
-    m_pManagerInternal->SetModelLoader(m_pRenderer->CreateModelLoader());
-    m_pManagerInternal->SetMaterialLoader(m_pRenderer->CreateMaterialLoader());
-    m_pManagerInternal->SetCurveLoader(Effekseer::MakeRefPtr<Effekseer::CurveLoader>());
-    // We can init sound player for effects
 }
 
 CClientEffekseerManager::~CClientEffekseerManager()
@@ -70,44 +51,4 @@ void CClientEffekseerManager::DeleteAll()
 
     // Clear the list
     m_List.clear();
-}
-
-void CClientEffekseerManager::Render()
-{
-    g_pCore->GetGraphics()->EnteringMTARenderZone();
-
-    D3DMATRIX matrixProj, matrixView;
-    auto pDevice = g_pCore->GetGraphics()->GetDevice();
-
-    pDevice->GetTransform(D3DTS_PROJECTION, &matrixProj);
-    pDevice->GetTransform(D3DTS_VIEW, &matrixView);
-
-    ::Effekseer::Matrix44 effProjection;
-    ::Effekseer::Matrix44 effView;
-
-    for (int a = 0; a < 4; a++)
-    {
-        for (int b = 0; b < 4; b++)
-        {
-            effProjection.Values[a][b] = matrixProj.m[a][b];
-            effView.Values[a][b] = matrixView.m[a][b];
-        }
-    }
-
-    m_pRenderer->SetProjectionMatrix(effProjection);
-    m_pRenderer->SetCameraMatrix(effView);
-
-    m_pManagerInternal->Update();
-
-    m_pRenderer->BeginRendering();
-
-    pDevice->SetRenderState(D3DRS_CLIPPING, TRUE);
-    pDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
-    pDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
-    pDevice->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-
-    m_pManagerInternal->Draw();
-    m_pRenderer->EndRendering();
-
-    g_pCore->GetGraphics()->LeavingMTARenderZone();
 }

@@ -3445,7 +3445,6 @@ void CClientGame::StaticPostWorldProcessPedsAfterPreRenderHandler()
 
 void CClientGame::StaticPreFxRenderHandler()
 {
-    g_pClientGame->GetManager()->GetEffekseerManager()->Render();
     g_pCore->OnPreFxRender();
 }
 

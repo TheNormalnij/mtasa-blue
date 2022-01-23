@@ -36,7 +36,7 @@ public:
     float             GetDynamicInput(int32_t index);
 
 private:
-    CVector              m_vecPosition;
+    CVector               m_vecPosition;
     Effekseer::ManagerRef m_pInternalManager;
     Effekseer::Handle     m_Handle;
 };
