@@ -2,7 +2,7 @@
 #include "../DirectX/ShaderGenerator.h"
 
 //#include <d3d11.h>
-#include <d3d9.h>
+#include "d3d9.h"
 //#include <d3dcompiler.h>
 #include <D3DX9Effect.h>
 #include <iostream>
@@ -30,16 +30,16 @@ static LPD3DXBUFFER CompileVertexShader(const char* vertexShaderText,
 
 	HRESULT hr;
 
-	hr = D3DXCompileShader(vertexShaderText,
-					strlen(vertexShaderText),
-					nullptr,
-					nullptr,
-					"main",
-					"vs_3_0",
-					flag,
-					shader,
-					error,
-					nullptr);
+	//hr = D3DXCompileShader(vertexShaderText,
+	//				strlen(vertexShaderText),
+	//				nullptr,
+	//				nullptr,
+	//				"main",
+	//				"vs_3_0",
+	//				flag,
+	//				shader,
+	//				error,
+	//				nullptr);
 
 	if (FAILED(hr))
 	{
@@ -81,16 +81,16 @@ static LPD3DXBUFFER CompilePixelShader(const char* vertexShaderText,
 
 	HRESULT hr;
 
-	hr = D3DXCompileShader(vertexShaderText,
-					strlen(vertexShaderText),
-					nullptr,
-					nullptr,
-					"main",
-					"ps_3_0",
-					flag,
-					shader,
-					error,
-					nullptr);
+	//hr = D3DXCompileShader(vertexShaderText,
+	//				strlen(vertexShaderText),
+	//				nullptr,
+	//				nullptr,
+	//				"main",
+	//				"ps_3_0",
+	//				flag,
+	//				shader,
+	//				error,
+	//				nullptr);
 
 	if (FAILED(hr))
 	{
