@@ -1544,7 +1544,7 @@ void CGraphics::OnDeviceInvalidate(IDirect3DDevice9* pDevice)
             m_pBigDXFonts[i]->OnLostDevice();
     }
 
-    m_pEffekseerRenderer->OnLostDevice();
+    m_pEffekseer->OnLostDevice();
 
     for (std::map<SString, SCustomScaleFontInfo>::iterator iter = m_CustomScaleFontMap.begin(); iter != m_CustomScaleFontMap.end(); ++iter)
         if (iter->second.pFont)
@@ -1572,7 +1572,7 @@ void CGraphics::OnDeviceRestore(IDirect3DDevice9* pDevice)
             m_pBigDXFonts[i]->OnResetDevice();
     }
 
-    m_pEffekseerRenderer->OnResetDevice();
+    m_pEffekseer->OnResetDevice();
 
     for (std::map<SString, SCustomScaleFontInfo>::iterator iter = m_CustomScaleFontMap.begin(); iter != m_CustomScaleFontMap.end(); ++iter)
         if (iter->second.pFont)
@@ -2399,22 +2399,8 @@ bool CGraphics::CopyDataFromSurface(IDirect3DSurface9* pSurface, CBuffer& outBuf
 
 void CGraphics::InitEffekseer()
 {
-    m_pEffekseerInterface = ::Effekseer::Manager::Create(EFK_MAX_PARTICLES);
-
-    m_pEffekseerRenderer = ::EffekseerRendererDX9::Renderer::Create(m_pDevice, EFK_MAX_PARTICLES);
-    m_pEffekseerRenderer->SetRestorationOfStatesFlag(false);
-
-    m_pEffekseerInterface->SetSpriteRenderer(m_pEffekseerRenderer->CreateSpriteRenderer());
-    m_pEffekseerInterface->SetRibbonRenderer(m_pEffekseerRenderer->CreateRibbonRenderer());
-    m_pEffekseerInterface->SetRingRenderer(m_pEffekseerRenderer->CreateRingRenderer());
-    m_pEffekseerInterface->SetTrackRenderer(m_pEffekseerRenderer->CreateTrackRenderer());
-    m_pEffekseerInterface->SetModelRenderer(m_pEffekseerRenderer->CreateModelRenderer());
-
-    // Create loaders
-    m_pEffekseerInterface->SetTextureLoader(m_pEffekseerRenderer->CreateTextureLoader());
-    m_pEffekseerInterface->SetModelLoader(m_pEffekseerRenderer->CreateModelLoader());
-    m_pEffekseerInterface->SetMaterialLoader(m_pEffekseerRenderer->CreateMaterialLoader());
-    m_pEffekseerInterface->SetCurveLoader(Effekseer::MakeRefPtr<Effekseer::CurveLoader>());
+    m_pEffekseer = EffekseerManager::GetManager();
+    m_pEffekseer->Init(m_pDevice);
 }
 
 void CGraphics::DrawEffekseerEffects()
@@ -2427,32 +2413,7 @@ void CGraphics::DrawEffekseerEffects()
     pDevice->GetTransform(D3DTS_PROJECTION, &matrixProj);
     pDevice->GetTransform(D3DTS_VIEW, &matrixView);
 
-    ::Effekseer::Matrix44 effProjection;
-    ::Effekseer::Matrix44 effView;
-
-    for (int a = 0; a < 4; a++)
-    {
-        for (int b = 0; b < 4; b++)
-        {
-            effProjection.Values[a][b] = matrixProj.m[a][b];
-            effView.Values[a][b] = matrixView.m[a][b];
-        }
-    }
-
-    m_pEffekseerRenderer->SetProjectionMatrix(effProjection);
-    m_pEffekseerRenderer->SetCameraMatrix(effView);
-
-    m_pEffekseerInterface->Update();
-
-    m_pEffekseerRenderer->BeginRendering();
-
-    pDevice->SetRenderState(D3DRS_CLIPPING, TRUE);
-    pDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
-    pDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
-    pDevice->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-
-    m_pEffekseerInterface->Draw();
-    m_pEffekseerRenderer->EndRendering();
+    m_pEffekseer->DrawEffects(matrixProj, matrixView);
 
     g_pCore->GetGraphics()->LeavingMTARenderZone();
 }

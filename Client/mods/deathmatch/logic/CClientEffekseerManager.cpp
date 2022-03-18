@@ -9,14 +9,12 @@
  *****************************************************************************/
 
 #include "StdInc.h"
-#define EFK_MAX_PARTICLES 8000
 
 CClientEffekseerManager::CClientEffekseerManager(CClientManager* pManager)
 {
     // Init
     m_pManager = pManager;
     m_bCanRemoveFromList = true;
-    m_pManagerInternal = ::Effekseer::Manager::Create(EFK_MAX_PARTICLES);
 }
 
 CClientEffekseerManager::~CClientEffekseerManager()

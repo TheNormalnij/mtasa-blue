@@ -36,6 +36,6 @@ private:
 
     std::list<CClientEffekseerEffectHandler*> m_Handles;
 
-    Effekseer::ManagerRef m_pInternalManager;
+    Effekseer::ManagerRef m_pInternalInterface;
     Effekseer::EffectRef  m_pEffect;
 };

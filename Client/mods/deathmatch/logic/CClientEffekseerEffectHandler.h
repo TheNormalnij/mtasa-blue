@@ -37,6 +37,6 @@ public:
 
 private:
     CVector               m_vecPosition;
-    Effekseer::ManagerRef m_pInternalManager;
+    Effekseer::ManagerRef m_pInternalInterface;
     Effekseer::Handle     m_Handle;
 };

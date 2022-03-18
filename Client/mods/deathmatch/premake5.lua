@@ -9,7 +9,7 @@ project "Client Deathmatch"
 
 	defines { "LUA_USE_APICHECK", "SDK_WITH_BCRYPT" }
 	links {
-		"Lua_Client", "pcre", "json-c", "ws2_32", "portaudio", "zlib", "cryptopp", "libspeex", "blowfish_bcrypt", "lunasvg", "effekseer",
+		"Lua_Client", "pcre", "json-c", "ws2_32", "portaudio", "zlib", "cryptopp", "libspeex", "blowfish_bcrypt", "lunasvg", "Effekseer",
 		"../../../vendor/bass/lib/bass",
 		"../../../vendor/bass/lib/bass_fx",
 		"../../../vendor/bass/lib/bassmix",
@@ -47,6 +47,7 @@ project "Client Deathmatch"
 			"../../../vendor/lunasvg/include",
 			"../../../vendor/effekseer/src/include",
 			"../../../vendor/effekseer/src/Effekseer",
+			"../../effekseer/",
 	}
 
 	files {

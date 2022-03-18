@@ -16,7 +16,7 @@ CClientEffekseerEffect::CClientEffekseerEffect(CClientManager* pManager, Element
     SetTypeName("effekseer-effect");
 
     m_pManager = pManager;
-    m_pInternalManager = pManager->GetEffekseerManager()->GetInternalManager();
+    m_pInternalInterface = EffekseerManager::GetManager()->GetInterface();
     m_pEffect = nullptr;
 }
 
@@ -32,15 +32,15 @@ bool CClientEffekseerEffect::Load(std::string strPath)
     std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
     std::u16string utf8str = utf16conv.from_bytes(strPath.c_str());
 
-    m_pEffect = Effekseer::Effect::Create(m_pInternalManager, utf8str.c_str());
+    m_pEffect = Effekseer::Effect::Create(m_pInternalInterface, utf8str.c_str());
 
     return (m_pEffect != nullptr) ? true : false;
 }
 
 CClientEffekseerEffectHandler* CClientEffekseerEffect::Play(const CVector& pos)
 {
-    auto handle = m_pInternalManager->Play(m_pEffect, pos.fX, pos.fY, pos.fZ);
-    m_pInternalManager->SetAutoDrawing(handle, true);
+    auto handle = m_pInternalInterface->Play(m_pEffect, pos.fX, pos.fY, pos.fZ);
+    m_pInternalInterface->SetAutoDrawing(handle, true);
 
     CClientEffekseerEffectHandler* pEffect = new CClientEffekseerEffectHandler(m_pManager, INVALID_ELEMENT_ID, handle);
     pEffect->SetParent(this);

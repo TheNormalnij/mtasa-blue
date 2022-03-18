@@ -1,7 +1,7 @@
-project "effekseer"
+project "effekseer vendor"
 	language "C++"
 	kind "StaticLib"
-	targetname "effekseer"
+	targetname "effekseer_vendor"
 
 	defines { "WIN32", "_WIN32", "_WIN32_WINNT=0x601", "_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion)", "__EFFEKSEER_USE_LIBPNG__", "__EFFEKSEER_RENDERER_INTERNAL_LOADER__" }
 	links { "libpng", "zlib", "d3dx9", "d3d9" }

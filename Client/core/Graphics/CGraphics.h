@@ -18,13 +18,11 @@ class CGraphics;
 #include "CGUI.h"
 #include "CSingleton.h"
 #include "CRenderItemManager.h"
-#include "Effekseer.h"
-#include "EffekseerRendererDX9.h"
+#include "EffekseerManager.h"
 
 #define DUMMY_PROGRESS_INITIAL_DELAY        1000    // Game stall time before spinner is displayed
 #define DUMMY_PROGRESS_MIN_DISPLAY_TIME     1000    // Minimum time spinner is drawn (to prevent flicker)
 #define DUMMY_PROGRESS_ANIMATION_INTERVAL   100     // Animation speed
-#define EFK_MAX_PARTICLES                   8000    // Effekseer particles limit
 
 class CTileBatcher;
 class CLine3DBatcher;
@@ -79,8 +77,6 @@ public:
 
     // DirectX misc. functions
     IDirect3DDevice9* GetDevice() { return m_pDevice; };
-
-    ::Effekseer::ManagerRef GetEffekseerInterface() { return m_pEffekseerInterface; };
 
     // Transformation functions
     void CalcWorldCoors(CVector* vecScreen, CVector* vecWorld);
@@ -389,8 +385,5 @@ private:
     CElapsedTime                            m_ProgressAnimTimer;
     uint                                    m_uiProgressAnimFrame;
     std::map<SString, SCustomScaleFontInfo> m_CustomScaleFontMap;
-
-
-    EffekseerRendererDX9::RendererRef m_pEffekseerRenderer;
-    Effekseer::ManagerRef             m_pEffekseerInterface;
+    EffekseerManager*                       m_pEffekseer;
 };
