@@ -18,7 +18,7 @@ class CGraphics;
 #include "CGUI.h"
 #include "CSingleton.h"
 #include "CRenderItemManager.h"
-#include "EffekseerManager.h"
+#include "CEffekseerManager.h"
 
 #define DUMMY_PROGRESS_INITIAL_DELAY        1000    // Game stall time before spinner is displayed
 #define DUMMY_PROGRESS_MIN_DISPLAY_TIME     1000    // Minimum time spinner is drawn (to prevent flicker)
@@ -77,6 +77,8 @@ public:
 
     // DirectX misc. functions
     IDirect3DDevice9* GetDevice() { return m_pDevice; };
+
+    CEffekseerManagerInterface* GetEffekseerManager() { return m_pEffekseer; };
 
     // Transformation functions
     void CalcWorldCoors(CVector* vecScreen, CVector* vecWorld);

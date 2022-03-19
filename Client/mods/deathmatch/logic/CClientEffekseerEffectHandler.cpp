@@ -16,7 +16,7 @@ CClientEffekseerEffectHandler::CClientEffekseerEffectHandler(CClientManager* pMa
 
     m_Handle = handle;
     m_pManager = pManager;
-    m_pInternalInterface = EffekseerManager::GetManager()->GetInterface();
+    m_pInternalInterface = g_pCore->GetGraphics()->GetEffekseerManager()->GetInterface();
 }
 
 CClientEffekseerEffectHandler::~CClientEffekseerEffectHandler()

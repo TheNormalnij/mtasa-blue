@@ -9,7 +9,8 @@
  *
  *****************************************************************************/
 
-#include "EffekseerManager.h"
+#include <StdInc.h>
+#include "CEffekseerManager.h"
 
 #define EFK_MAX_PARTICLES 8000
 

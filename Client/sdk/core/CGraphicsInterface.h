@@ -13,6 +13,7 @@
 
 #include "CVector.h"
 #include <d3d9.h>
+#include "CEffekseerManagerInterface.h"
 
 // Vertex type used by the primitives batchers
 struct PrimitiveVertice
@@ -100,6 +101,7 @@ class CGraphicsInterface
 {
 public:
     virtual IDirect3DDevice9* GetDevice() = 0;
+    virtual CEffekseerManagerInterface* GetEffekseerManager() = 0;
 
     virtual void CalcWorldCoors(CVector* vecScreen, CVector* vecWorld) = 0;
     virtual void CalcScreenCoors(CVector* vecWorld, CVector* vecScreen) = 0;

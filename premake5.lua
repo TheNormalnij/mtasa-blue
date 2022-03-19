@@ -121,7 +121,6 @@ workspace "MTASA"
 		include "Client/loader"
 		include "Client/multiplayer_sa"
 		include "Client/mods/deathmatch"
-		include "Client/effekseer"
 
 		group "Client/CEGUI"
 		include "vendor/cegui-0.4.0-custom/src/renderers/directx9GUIRenderer"

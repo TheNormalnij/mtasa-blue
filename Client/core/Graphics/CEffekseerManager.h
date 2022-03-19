@@ -13,15 +13,17 @@ class EffekseerManager;
 
 #pragma once
 
+#include <core/CGraphicsInterface.h>
 #include "Effekseer.h"
 #include "EffekseerRendererDX9.h"
 
-class EffekseerManager
+class EffekseerManager : public CEffekseerManagerInterface
 {
 private:
     EffekseerManager();
     ~EffekseerManager();
 
+    static ::Effekseer::Matrix44 ConvertD3DMatrix(D3DMATRIX matrix);
 public:
     static EffekseerManager* GetManager();
 
@@ -33,9 +35,6 @@ public:
     void OnResetDevice();
 
     void DrawEffects(D3DMATRIX mProection, D3DMATRIX mView);
-
-    ::Effekseer::Matrix44 ConvertD3DMatrix(D3DMATRIX matrix);
-
 private:
     Effekseer::ManagerRef m_pInterface;
 

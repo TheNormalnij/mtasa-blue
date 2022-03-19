@@ -20,8 +20,8 @@ project "Client Core"
 			"../../vendor/pthreads/include",
 			"../../vendor/sparsehash/src/",
 			"../../vendor/detours/4.0.1/src",
-			"../../vendor/effekseer/src/include",
 			"../../vendor/effekseer/src/Effekseer",
+			"../../vendor/effekseer/src/include",
 			"../effekseer",
 		}
 
@@ -51,6 +51,8 @@ project "Client Core"
 		"strmiids",	"odbc32", "odbccp32", "shlwapi", "winmm", "gdi32", "Imm32", "Psapi",
 		"pthread", "libpng", "jpeg", "zlib", "tinygettext", "Effekseer"
 	}
+
+	libdirs { buildpath("mta") }
 
 	defines {
 		"INITGUID",

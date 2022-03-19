@@ -16,7 +16,7 @@ CClientEffekseerEffect::CClientEffekseerEffect(CClientManager* pManager, Element
     SetTypeName("effekseer-effect");
 
     m_pManager = pManager;
-    m_pInternalInterface = EffekseerManager::GetManager()->GetInterface();
+    m_pInternalInterface = g_pCore->GetGraphics()->GetEffekseerManager()->GetInterface();
     m_pEffect = nullptr;
 }
 

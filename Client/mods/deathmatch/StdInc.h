@@ -51,7 +51,6 @@
 #include "net/SyncStructures.h"
 #include "CIdArray.h"
 #include "pcrecpp.h"
-#include "EffekseerManager.h"
 
 // Shared logic includes
 #include <Utils.h>
