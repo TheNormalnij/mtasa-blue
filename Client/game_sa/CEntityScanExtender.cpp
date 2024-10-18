@@ -26,8 +26,22 @@ static auto*         SCAN_LIST = (tScanLists*)0xC8E0C8;
 
 static std::unique_ptr<CEntityScanExtenter> instance;
 
+// Missing in C++14
+static std::int32_t clamp(std::int32_t v, std::int32_t min, std::int32_t max)
+{
+    if (v < min)
+        return min;
+    if (v > max)
+        return max;
+
+    return v;
+}
+
 CEntityScanExtenter::CEntityScanExtenter()
 {
+    PatchOnce();
+    // Only for tests
+    PatchDynamic();
 }
 
 bool CEntityScanExtenter::IsInWorldSector(std::int32_t x, std::int32_t y) const noexcept
@@ -50,17 +64,7 @@ CSector* CEntityScanExtenter::GetSectorResize(std::uint32_t x, std::uint32_t y)
 
 void CEntityScanExtenter::Resize(std::size_t count)
 {
-}
-
-// Missing in C++14
-static std::int32_t clamp(std::int32_t v, std::int32_t min, std::int32_t max)
-{
-    if (v < min)
-        return min;
-    if (v > max)
-        return max;
-
-    return v;
+    PatchDynamic();
 }
 
 #define HOOKPOS_GetSector  0x407260
@@ -103,4 +107,27 @@ void CEntityScanExtenter::StaticSetHooks()
 
     EZHookInstall(CRenderer__SetupScanLists);
     EZHookInstall(GetSector);
+}
+
+void CEntityScanExtenter::PatchOnce()
+{
+    // CEntity::Add(CRect) without lods
+
+    MemPut(0x5347EB + 2, &m_woldLeft);
+    MemPut(0x534819 + 2, &m_woldRight);
+    MemPut(0x534832 + 2, &m_woldTop);
+    MemPut(0x53484B + 2, &m_woldBottom);
+
+    MemPut(0x534927 + 2, &m_halfSectorsX);
+    MemPut(0x534948 + 2, &m_halfSectorsY);
+    MemPut(0x534967 + 2, &m_halfSectorsX);
+    MemPut(0x534988 + 2, &m_halfSectorsY);
+}
+
+void CEntityScanExtenter::PatchDynamic()
+{
+    MemPut(0x53480D + 4, m_woldLeft);
+    MemPut(0x534826 + 4, m_woldRight - 1.f);
+    MemPut(0x53483F + 4, m_woldTop);
+    MemPut(0x534858 + 4, m_woldBottom - 1.f);
 }

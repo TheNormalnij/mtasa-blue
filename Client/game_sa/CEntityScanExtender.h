@@ -38,8 +38,20 @@ public:
     std::int32_t GetSectorsY() const noexcept { return m_sectorsY; };
 
 private:
+    void PatchOnce();
+    void PatchDynamic();
+
+private:
     std::int32_t m_sectorsX{120};
     std::int32_t m_sectorsY{120};
     std::size_t  m_SectorsHalfW{3000};
     std::size_t  m_SectorsHalfH{3000};
+
+    float        m_halfSectorsX{60.f};
+    float        m_halfSectorsY{60.f};
+
+    float        m_woldLeft{-3000.f};
+    float        m_woldRight{3000.f};
+    float        m_woldTop{-3000.f};
+    float        m_woldBottom{3000.f};
 };
