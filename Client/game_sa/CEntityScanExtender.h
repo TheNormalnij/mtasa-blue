@@ -34,6 +34,9 @@ public:
 
     static void StaticSetHooks();
 
+    std::int32_t GetSectorsX() const noexcept { return m_sectorsX; };
+    std::int32_t GetSectorsY() const noexcept { return m_sectorsY; };
+
 private:
     std::int32_t m_sectorsX{120};
     std::int32_t m_sectorsY{120};
