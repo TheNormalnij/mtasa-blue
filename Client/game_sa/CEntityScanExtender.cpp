@@ -67,6 +67,64 @@ void CEntityScanExtenter::Resize(std::size_t count)
     PatchDynamic();
 }
 
+
+void CEntityScanExtenter::PatchOnce()
+{
+    // CEntity::Add(CRect) without lods (yet)
+
+    MemPut(0x5347EB + 2, &m_woldLeft);
+    MemPut(0x534819 + 2, &m_woldRight);
+    MemPut(0x534832 + 2, &m_woldTop);
+    MemPut(0x53484B + 2, &m_woldBottom);
+
+    MemPut(0x534927 + 2, &m_halfSectorsX);
+    MemPut(0x534948 + 2, &m_halfSectorsY);
+    MemPut(0x534967 + 2, &m_halfSectorsX);
+    MemPut(0x534988 + 2, &m_halfSectorsY);
+
+    // CEntity::Remove without lods (yet)
+
+    MemPut(0x534AFD + 2, &m_woldLeft);
+    MemPut(0x534B2A + 2, &m_woldLeft);
+    MemPut(0x534B3A + 2, &m_woldRight);
+    MemPut(0x534B53 + 2, &m_woldTop);
+    MemPut(0x534B6C + 2, &m_woldBottom);
+
+    // 0x71CB70 CGlass::HasGlassBeenShatteredAtCoors ???
+
+	// CStreaming::AddModelsToRequestList
+	MemPut(0x40D45E + 2, &m_halfSectorsX);
+    MemPut(0x40D47E + 2, &m_halfSectorsY);
+    MemPut(0x40D49D + 2, &m_halfSectorsX);
+    MemPut(0x40D4E9 + 2, &m_halfSectorsY);
+
+    MemPut(0x40D52D + 2, &m_halfSectorsX);
+    MemPut(0x40D57E + 2, &m_halfSectorsY);
+}
+
+void CEntityScanExtenter::PatchDynamic()
+{
+    // CEntity::Add(CRect)
+    MemPut(0x53480D + 4, m_woldLeft);
+    MemPut(0x534826 + 4, m_woldRight - 1.f);
+    MemPut(0x53483F + 4, m_woldTop);
+    MemPut(0x534858 + 4, m_woldBottom - 1.f);
+
+    // CEntity::Remove
+    MemPut(0x534B47 + 4, m_woldRight - 1.f);
+    MemPut(0x534B60 + 4, m_woldTop);
+    MemPut(0x534B79 + 4, m_woldBottom - 1.f);
+
+    // CStreaming::AddModelsToRequestList
+
+	MemPut(0x40D547 + 1, std::uint32_t(m_halfSectorsX - 1.f));
+
+    MemPut(0x40D68C + 3, DEFAULT_SECTORS);
+
+    int i = 10;
+}
+
+
 #define HOOKPOS_GetSector  0x407260
 #define HOOKSIZE_GetSector 0x5
 CSector* __cdecl HOOK_GetSector(std::int32_t x, std::int32_t y)
@@ -101,51 +159,53 @@ static void __cdecl HOOK_CRenderer__SetupScanLists(std::int32_t sectorX, std::in
     }
 }
 
+#define HOOKPOS_CStreaming__AddModelsToRequestLiså1  0x40D66B
+#define HOOKSIZE_CStreaming__AddModelsToRequestLiså1 0x5
+static std::size_t CStreaming__AddModelsToRequestList1_CONTINUE = 0x40D578;
+void __declspec(naked) HOOK_CStreaming__AddModelsToRequestLiså1()
+{
+    _asm {
+			mov edi, instance
+			mov ebp, [edi+0x8]       ; m_sectorsYMinusOne
+			fld dword ptr [esp+0x14] ; original code
+			sub esp, 8
+			jmp CStreaming__AddModelsToRequestList1_CONTINUE
+    }
+}
+
+#define HOOKPOS_CStreaming__AddModelsToRequestLiså2  0x40D66B
+#define HOOKSIZE_CStreaming__AddModelsToRequestLiså2 0x5
+static std::size_t CStreaming__AddModelsToRequestList2_CONTINUE = 0x40D686;
+void __declspec(naked) HOOK_CStreaming__AddModelsToRequestLiså2()
+{
+    _asm {
+			mov edi, instance
+			mov edi, [edi] ; m_sectorsX
+			dec edi
+			cmp ecx, edi
+			jl sectorY
+			mov ecx, edi
+		sectorY:
+			mov edi, instance
+			mov edi, [edi+0x4] ; m_sectorsY
+			dec edi
+			mov ecx, [esp+0x5C]
+			cmp eax, edi
+			jl tableAccess
+			mov eax, edi
+		tableAccess:
+			inc edi
+			imul eax, edi
+			jmp CStreaming__AddModelsToRequestList2_CONTINUE
+    }
+}
+
 void CEntityScanExtenter::StaticSetHooks()
 {
     instance = std::make_unique<CEntityScanExtenter>();
 
     EZHookInstall(CRenderer__SetupScanLists);
+    EZHookInstall(CStreaming__AddModelsToRequestLiså1);
+    EZHookInstall(CStreaming__AddModelsToRequestLiså2);
     EZHookInstall(GetSector);
-}
-
-void CEntityScanExtenter::PatchOnce()
-{
-    // CEntity::Add(CRect) without lods (yet)
-
-    MemPut(0x5347EB + 2, &m_woldLeft);
-    MemPut(0x534819 + 2, &m_woldRight);
-    MemPut(0x534832 + 2, &m_woldTop);
-    MemPut(0x53484B + 2, &m_woldBottom);
-
-    MemPut(0x534927 + 2, &m_halfSectorsX);
-    MemPut(0x534948 + 2, &m_halfSectorsY);
-    MemPut(0x534967 + 2, &m_halfSectorsX);
-    MemPut(0x534988 + 2, &m_halfSectorsY);
-
-    // CEntity::Remove without lods (yet)
-
-    MemPut(0x534AFD + 2, &m_woldLeft);
-    MemPut(0x534B2A + 2, &m_woldLeft);
-    MemPut(0x534B3A + 2, &m_woldRight);
-    MemPut(0x534B53 + 2, &m_woldTop);
-    MemPut(0x534B6C + 2, &m_woldBottom);
-
-    // 0x71CB70 CGlass::HasGlassBeenShatteredAtCoors ??? 
-
-
-}
-
-void CEntityScanExtenter::PatchDynamic()
-{
-    // CEntity::Add(CRect)
-    MemPut(0x53480D + 4, m_woldLeft);
-    MemPut(0x534826 + 4, m_woldRight - 1.f);
-    MemPut(0x53483F + 4, m_woldTop);
-    MemPut(0x534858 + 4, m_woldBottom - 1.f);
-
-    // CEntity::Remove
-    MemPut(0x534B47 + 4, m_woldRight - 1.f);
-    MemPut(0x534B60 + 4, m_woldTop);
-    MemPut(0x534B79 + 4, m_woldBottom - 1.f);
 }

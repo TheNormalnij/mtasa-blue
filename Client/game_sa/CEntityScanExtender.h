@@ -26,32 +26,36 @@ class CEntityScanExtenter
 public:
     CEntityScanExtenter();
 
-    bool           IsInWorldSector(std::int32_t x, std::int32_t y) const noexcept;
-    CSector*       GetSector(std::uint32_t x, std::uint32_t y) const noexcept;
+    bool     IsInWorldSector(std::int32_t x, std::int32_t y) const noexcept;
+    CSector* GetSector(std::uint32_t x, std::uint32_t y) const noexcept;
 
     CSector* GetSectorResize(std::uint32_t x, std::uint32_t y);
-    void           Resize(std::size_t count);
+    void     Resize(std::size_t count);
 
     static void StaticSetHooks();
 
-    std::int32_t GetSectorsX() const noexcept { return m_sectorsX; };
-    std::int32_t GetSectorsY() const noexcept { return m_sectorsY; };
+    std::size_t GetSectorsX() const noexcept { return m_sectorsX; };
+    std::size_t GetSectorsY() const noexcept { return m_sectorsY; };
 
 private:
     void PatchOnce();
     void PatchDynamic();
 
 private:
-    std::int32_t m_sectorsX{120};
-    std::int32_t m_sectorsY{120};
-    std::size_t  m_SectorsHalfW{3000};
-    std::size_t  m_SectorsHalfH{3000};
+    // Do NOT move 
+    std::size_t m_sectorsX{120};
+    std::size_t m_sectorsY{120};
+    std::size_t m_sectorsYMinusOne{120 - 1};
+    //
 
-    float        m_halfSectorsX{60.f};
-    float        m_halfSectorsY{60.f};
+    std::size_t m_SectorsHalfW{3000};
+    std::size_t m_SectorsHalfH{3000};
 
-    float        m_woldLeft{-3000.f};
-    float        m_woldRight{3000.f};
-    float        m_woldTop{-3000.f};
-    float        m_woldBottom{3000.f};
+    float m_halfSectorsX{60.f};
+    float m_halfSectorsY{60.f};
+
+    float m_woldLeft{-3000.f};
+    float m_woldRight{3000.f};
+    float m_woldTop{-3000.f};
+    float m_woldBottom{3000.f};
 };
