@@ -111,7 +111,7 @@ void CEntityScanExtenter::StaticSetHooks()
 
 void CEntityScanExtenter::PatchOnce()
 {
-    // CEntity::Add(CRect) without lods
+    // CEntity::Add(CRect) without lods (yet)
 
     MemPut(0x5347EB + 2, &m_woldLeft);
     MemPut(0x534819 + 2, &m_woldRight);
@@ -122,12 +122,26 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x534948 + 2, &m_halfSectorsY);
     MemPut(0x534967 + 2, &m_halfSectorsX);
     MemPut(0x534988 + 2, &m_halfSectorsY);
+
+    // CEntity::Remove without lods (yet)
+
+    MemPut(0x534AFD + 2, &m_woldLeft);
+    MemPut(0x534B2A + 2, &m_woldLeft);
+    MemPut(0x534B3A + 2, &m_woldRight);
+    MemPut(0x534B53 + 2, &m_woldTop);
+    MemPut(0x534B6C + 2, &m_woldBottom);
 }
 
 void CEntityScanExtenter::PatchDynamic()
 {
+    // CEntity::Add(CRect)
     MemPut(0x53480D + 4, m_woldLeft);
     MemPut(0x534826 + 4, m_woldRight - 1.f);
     MemPut(0x53483F + 4, m_woldTop);
     MemPut(0x534858 + 4, m_woldBottom - 1.f);
+
+    // CEntity::Remove
+    MemPut(0x534B47 + 4, m_woldRight - 1.f);
+    MemPut(0x534B60 + 4, m_woldTop);
+    MemPut(0x534B79 + 4, m_woldBottom - 1.f);
 }
