@@ -130,6 +130,10 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x534B3A + 2, &m_woldRight);
     MemPut(0x534B53 + 2, &m_woldTop);
     MemPut(0x534B6C + 2, &m_woldBottom);
+
+    // 0x71CB70 CGlass::HasGlassBeenShatteredAtCoors ??? 
+
+
 }
 
 void CEntityScanExtenter::PatchDynamic()
