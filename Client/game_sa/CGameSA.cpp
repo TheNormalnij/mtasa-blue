@@ -59,6 +59,7 @@
 #include "CIplStoreSA.h"
 #include "CBuildingRemovalSA.h"
 #include "CCheckpointSA.h"
+#include "CEntityScanExtender.h"
 
 extern CGameSA* pGame;
 
@@ -242,6 +243,7 @@ CGameSA::CGameSA()
     D3DResourceSystemSA::StaticSetHooks();
     CVehicleSA::StaticSetHooks();
     CCheckpointSA::StaticSetHooks();
+    CEntityScanExtenter::StaticSetHooks();
 }
 
 CGameSA::~CGameSA()
