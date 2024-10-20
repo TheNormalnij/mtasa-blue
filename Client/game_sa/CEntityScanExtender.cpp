@@ -26,16 +26,10 @@ static auto*         SCAN_LIST = (tScanLists*)0xC8E0C8;
 
 static std::unique_ptr<CEntityScanExtenter> instance;
 
-// Missing in C++14
-static std::int32_t clamp(std::int32_t v, std::int32_t min, std::int32_t max)
-{
-    if (v < min)
-        return min;
-    if (v > max)
-        return max;
-
-    return v;
-}
+static std::uint32_t CURRENT_SECTORS_X = 120;
+static std::uint32_t CURRENT_SECTORS_Y = 120;
+static std::uint32_t CURRENT_SECTORS_X_MINUS_ONE = 119;
+static std::uint32_t CURRENT_SECTORS_Y_MINUS_ONE = 119;
 
 CEntityScanExtenter::CEntityScanExtenter()
 {
@@ -46,12 +40,22 @@ CEntityScanExtenter::CEntityScanExtenter()
 
 bool CEntityScanExtenter::IsInWorldSector(std::int32_t x, std::int32_t y) const noexcept
 {
-    return x >= 0 && x <= m_sectorsX && y >= 0 && y <= m_sectorsY;
+    return x >= 0 && x <= (std::int32_t)GetSectorsX() && y >= 0 && y <= (std::int32_t)GetSectorsY();
 }
 
 CSector* CEntityScanExtenter::GetSector(std::uint32_t x, std::uint32_t y) const noexcept
 {
     return &DEFAULT_SECTORS[y][x];
+}
+
+std::uint32_t CEntityScanExtenter::GetSectorsX() const noexcept
+{
+    return CURRENT_SECTORS_X;
+}
+
+std::uint32_t CEntityScanExtenter::GetSectorsY() const noexcept
+{
+    return CURRENT_SECTORS_Y;
 }
 
 CSector* CEntityScanExtenter::GetSectorResize(std::uint32_t x, std::uint32_t y)
@@ -100,6 +104,11 @@ void CEntityScanExtenter::PatchOnce()
 
     MemPut(0x40D52D + 2, &m_halfSectorsX);
     MemPut(0x40D57E + 2, &m_halfSectorsY);
+
+	// CStreaming::DeleteAllRwObjects
+
+	MemPut(0x4090D7 + 2, &m_halfSectorsX);
+    MemPut(0x4090F1 + 2, &m_halfSectorsY);
 }
 
 void CEntityScanExtenter::PatchDynamic()
@@ -121,9 +130,22 @@ void CEntityScanExtenter::PatchDynamic()
 
     MemPut(0x40D68C + 3, DEFAULT_SECTORS);
 
+	// CStreaming::DeleteAllRwObjects
+
+
     int i = 10;
 }
 
+// Missing in C++14
+static std::int32_t clamp(std::int32_t v, std::int32_t min, std::int32_t max)
+{
+    if (v < min)
+        return min;
+    if (v > max)
+        return max;
+
+    return v;
+}
 
 #define HOOKPOS_GetSector  0x407260
 #define HOOKSIZE_GetSector 0x5
@@ -139,22 +161,21 @@ CSector* __cdecl HOOK_GetSector(std::int32_t x, std::int32_t y)
 static void __cdecl HOOK_CRenderer__SetupScanLists(std::int32_t sectorX, std::int32_t sectorY)
 {
     CRepeatSector* repeatSector = &DEFAULT_REPEAT_SECTORS[sectorY & 0xF][sectorX & 0xF];
+
+    SCAN_LIST->objectsList = &repeatSector->GetList(REPEATSECTOR_OBJECTS);
+    SCAN_LIST->vehiclesList = &repeatSector->GetList(REPEATSECTOR_VEHICLES);
+    SCAN_LIST->pedsList = &repeatSector->GetList(REPEATSECTOR_PEDS);
+
     if (instance->IsInWorldSector(sectorX, sectorY))
     {
         CSector* sector = instance->GetSector(sectorX, sectorY);
         SCAN_LIST->buildingsList = &sector->m_buildings;
-        SCAN_LIST->objectsList = &repeatSector->GetList(REPEATSECTOR_OBJECTS);
-        SCAN_LIST->vehiclesList = &repeatSector->GetList(REPEATSECTOR_VEHICLES);
-        SCAN_LIST->pedsList = &repeatSector->GetList(REPEATSECTOR_PEDS);
         SCAN_LIST->dummiesList = &sector->m_dummies;
     }
     else
     {
         // sector x and y are out of bounds
         SCAN_LIST->buildingsList = nullptr;
-        SCAN_LIST->objectsList = &repeatSector->GetList(REPEATSECTOR_OBJECTS);
-        SCAN_LIST->vehiclesList = &repeatSector->GetList(REPEATSECTOR_VEHICLES);
-        SCAN_LIST->pedsList = &repeatSector->GetList(REPEATSECTOR_PEDS);
         SCAN_LIST->dummiesList = nullptr;
     }
 }
@@ -165,8 +186,7 @@ static std::size_t CStreaming__AddModelsToRequestList1_CONTINUE = 0x40D578;
 void __declspec(naked) HOOK_CStreaming__AddModelsToRequestLiså1()
 {
     _asm {
-			mov edi, instance
-			mov ebp, [edi+0x8]       ; m_sectorsYMinusOne
+			mov ebp, CURRENT_SECTORS_Y_MINUS_ONE
 			fld dword ptr [esp+0x14] ; original code
 			sub esp, 8
 			jmp CStreaming__AddModelsToRequestList1_CONTINUE
@@ -179,16 +199,12 @@ static std::size_t CStreaming__AddModelsToRequestList2_CONTINUE = 0x40D686;
 void __declspec(naked) HOOK_CStreaming__AddModelsToRequestLiså2()
 {
     _asm {
-			mov edi, instance
-			mov edi, [edi] ; m_sectorsX
-			dec edi
+			mov edi, CURRENT_SECTORS_X_MINUS_ONE
 			cmp ecx, edi
 			jl sectorY
 			mov ecx, edi
-		sectorY:
-			mov edi, instance
-			mov edi, [edi+0x4] ; m_sectorsY
-			dec edi
+        sectorY:
+			mov edi, CURRENT_SECTORS_Y_MINUS_ONE
 			mov ecx, [esp+0x5C]
 			cmp eax, edi
 			jl tableAccess
@@ -200,6 +216,84 @@ void __declspec(naked) HOOK_CStreaming__AddModelsToRequestLiså2()
     }
 }
 
+#define HOOKPOS_CStreaming__DeleteAllRwObjects1  0x409125
+#define HOOKSIZE_CStreaming__DeleteAllRwObjects1 0x5
+static std::size_t CStreaming__CStreaming__DeleteAllRwObjects1_CONTINUE = 0x409133;
+void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects1()
+{
+    _asm {
+        mov eax, CURRENT_SECTORS_X
+        dec eax
+        cmp ecx, eax
+        jl exitHook
+        mov ecx, eax
+    exitHook:
+        jmp CStreaming__CStreaming__DeleteAllRwObjects1_CONTINUE
+    }
+}
+
+#define HOOKPOS_CStreaming__DeleteAllRwObjects2  0x40913F
+#define HOOKSIZE_CStreaming__DeleteAllRwObjects2 0x5
+static std::size_t CStreaming__CStreaming__DeleteAllRwObjects2_CONTINUE = 0x40914C;
+void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects2()
+{
+    _asm {
+        mov esi, CURRENT_SECTORS_Y_MINUS_ONE
+        cmp eax, esi
+        jl tableOffsetCalc
+        mov eax, esi
+    tableOffsetCalc:
+        inc esi
+        imul eax, esi
+        jmp CStreaming__CStreaming__DeleteAllRwObjects2_CONTINUE
+    }
+}
+
+#define HOOKPOS_CStreaming__DeleteAllRwObjects3  0x4091AA
+#define HOOKSIZE_CStreaming__DeleteAllRwObjects3 0x5
+static std::size_t CStreaming__CStreaming__DeleteAllRwObjects3_CONTINUE = 0x4091C3;
+void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects3()
+{
+    _asm {
+        mov esi, CURRENT_SECTORS_X_MINUS_ONE
+        cmp ecx, esi
+        jl nextCheck
+        mov ecx, esi
+    nextCheck:
+        mov eax, ebx
+        mov esi, CURRENT_SECTORS_Y_MINUS_ONE
+        cmp eax, esi
+        jl calcTableOffset
+        mov eax, esi
+    calcTableOffset:
+        inc esi
+        imul eax, esi
+        jmp CStreaming__CStreaming__DeleteAllRwObjects3_CONTINUE
+    }
+}
+
+#define HOOKPOS_CStreaming__DeleteAllRwObjects4  0x4091E7
+#define HOOKSIZE_CStreaming__DeleteAllRwObjects4 0x5
+static std::size_t CStreaming__CStreaming__DeleteAllRwObjects4_LOOP_Y = 0x409125;
+static std::size_t CStreaming__CStreaming__DeleteAllRwObjects4_LOOP_X = 0x409110;
+static std::size_t CStreaming__CStreaming__DeleteAllRwObjects4_CONTINUE = 0x4091F8;
+void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects4()
+{
+    _asm {
+        mov esi, CURRENT_SECTORS_Y
+        cmp edi, esi
+        jl toYLoop
+        mov eax, [esp+0x14]
+        inc eax
+        mov esi, CURRENT_SECTORS_X
+        cmp eax, esi
+        jmp CStreaming__CStreaming__DeleteAllRwObjects4_CONTINUE
+
+    toYLoop:
+        jmp CStreaming__CStreaming__DeleteAllRwObjects4_LOOP_Y
+    }
+}
+
 void CEntityScanExtenter::StaticSetHooks()
 {
     instance = std::make_unique<CEntityScanExtenter>();
@@ -207,5 +301,9 @@ void CEntityScanExtenter::StaticSetHooks()
     EZHookInstall(CRenderer__SetupScanLists);
     EZHookInstall(CStreaming__AddModelsToRequestLiså1);
     EZHookInstall(CStreaming__AddModelsToRequestLiså2);
+    EZHookInstall(CStreaming__DeleteAllRwObjects1);
+    EZHookInstall(CStreaming__DeleteAllRwObjects2);
+    EZHookInstall(CStreaming__DeleteAllRwObjects3);
+    EZHookInstall(CStreaming__DeleteAllRwObjects4);
     EZHookInstall(GetSector);
 }

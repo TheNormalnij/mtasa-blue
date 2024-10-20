@@ -34,20 +34,14 @@ public:
 
     static void StaticSetHooks();
 
-    std::size_t GetSectorsX() const noexcept { return m_sectorsX; };
-    std::size_t GetSectorsY() const noexcept { return m_sectorsY; };
+    std::uint32_t GetSectorsX() const noexcept;
+    std::uint32_t GetSectorsY() const noexcept;
 
 private:
     void PatchOnce();
     void PatchDynamic();
 
 private:
-    // Do NOT move 
-    std::size_t m_sectorsX{120};
-    std::size_t m_sectorsY{120};
-    std::size_t m_sectorsYMinusOne{120 - 1};
-    //
-
     std::size_t m_SectorsHalfW{3000};
     std::size_t m_SectorsHalfH{3000};
 
