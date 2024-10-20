@@ -17,8 +17,8 @@ constexpr auto MAX_SECTORS_X = 120;
 
 struct CSector
 {
-    CPtrNodeDoubleListSAInterface<CEntitySAInterface*> m_buildings;
-    CPtrNodeDoubleListSAInterface<CEntitySAInterface*> m_dummies;
+    CPtrNodeDoubleListSAInterface<CEntitySAInterface> m_buildings;
+    CPtrNodeDoubleListSAInterface<CEntitySAInterface> m_dummies;
 };
 
 class CEntityScanExtenter
@@ -32,7 +32,10 @@ public:
     CSector* GetSectorResize(std::uint32_t x, std::uint32_t y);
     void     Resize(std::size_t count);
 
-    static void StaticSetHooks();
+    static void Initialize();
+
+    std::int32_t GetSectorX(float x) const noexcept;
+    std::int32_t GetSectorY(float x) const noexcept;
 
     std::uint32_t GetSectorsX() const noexcept;
     std::uint32_t GetSectorsY() const noexcept;
@@ -41,7 +44,11 @@ private:
     void PatchOnce();
     void PatchDynamic();
 
+    static void StaticSetHooks();
+
 private:
+    std::size_t m_SectorsW{6000};
+    std::size_t m_SectorsH{6000};
     std::size_t m_SectorsHalfW{3000};
     std::size_t m_SectorsHalfH{3000};
 

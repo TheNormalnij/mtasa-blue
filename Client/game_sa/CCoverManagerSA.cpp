@@ -18,7 +18,7 @@ CCoverManagerSA::CCoverManagerSA()
 
 void CCoverManagerSA::RemoveAllCovers()
 {
-    CPtrNodeDoubleLink<CEntitySAInterface>* pNode = m_pCoverList->m_pNode;
+    CPtrNodeDoubleLink<CEntitySAInterface>* pNode = m_pCoverList->GetNode();
     while (pNode)
     {
         RemoveCoverFromArray(pNode->pItem);

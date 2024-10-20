@@ -23,7 +23,6 @@ template <class T>
 class CPtrNodeDoubleListSAInterface
 {
 public:
-    CPtrNodeDoubleLink<T>* m_pNode;
 
     void RemoveItem(T* pItem)
     {
@@ -38,4 +37,9 @@ public:
             RemoveItem(m_pNode->pItem);
         }
     };
+
+    CPtrNodeDoubleLink<T>* GetNode() const noexcept { return m_pNode; }
+
+private:
+    CPtrNodeDoubleLink<T>* m_pNode;
 };

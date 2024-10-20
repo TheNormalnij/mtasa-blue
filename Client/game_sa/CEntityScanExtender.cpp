@@ -13,14 +13,17 @@
 
 struct tScanLists
 {
-    CPtrNodeDoubleListSAInterface<CEntitySAInterface*>* buildingsList;
-    CPtrNodeDoubleListSAInterface<CEntitySAInterface*>* objectsList;
-    CPtrNodeDoubleListSAInterface<CEntitySAInterface*>* vehiclesList;
-    CPtrNodeDoubleListSAInterface<CEntitySAInterface*>* pedsList;
-    CPtrNodeDoubleListSAInterface<CEntitySAInterface*>* dummiesList;
+    CPtrNodeDoubleListSAInterface<CEntitySAInterface>* buildingsList;
+    CPtrNodeDoubleListSAInterface<CEntitySAInterface>* objectsList;
+    CPtrNodeDoubleListSAInterface<CEntitySAInterface>* vehiclesList;
+    CPtrNodeDoubleListSAInterface<CEntitySAInterface>* pedsList;
+    CPtrNodeDoubleListSAInterface<CEntitySAInterface>* dummiesList;
 };
 
-static CRepeatSector (&DEFAULT_REPEAT_SECTORS)[16][16] = *(CRepeatSector(*)[16][16])0xB992B8;
+const auto MAX_REPEAT_SECTORS_X = 16;
+const auto MAX_REPEAT_SECTORS_Y = 16;
+
+static CRepeatSector (&DEFAULT_REPEAT_SECTORS)[MAX_REPEAT_SECTORS_Y][MAX_REPEAT_SECTORS_X] = *(CRepeatSector(*)[16][16])0xB992B8;
 static CSector       (&DEFAULT_SECTORS)[MAX_SECTORS_Y][MAX_SECTORS_X] = *(CSector(*)[MAX_SECTORS_Y][MAX_SECTORS_X])0xB7D0B8;
 static auto*         SCAN_LIST = (tScanLists*)0xC8E0C8;
 
@@ -71,6 +74,17 @@ void CEntityScanExtenter::Resize(std::size_t count)
     PatchDynamic();
 }
 
+std::int32_t CEntityScanExtenter::GetSectorX(float x) const noexcept
+{
+    x = x / static_cast<float>(m_SectorsW / CURRENT_SECTORS_X) + static_cast<float>(CURRENT_SECTORS_X / 2);
+    return std::floor(x);
+}
+
+std::int32_t CEntityScanExtenter::GetSectorY(float y) const noexcept
+{
+    y = y / static_cast<float>(m_SectorsH / CURRENT_SECTORS_Y) + static_cast<float>(CURRENT_SECTORS_Y / 2);
+    return std::floor(y);
+}
 
 void CEntityScanExtenter::PatchOnce()
 {
@@ -182,7 +196,7 @@ static void __cdecl HOOK_CRenderer__SetupScanLists(std::int32_t sectorX, std::in
 
 #define HOOKPOS_CStreaming__AddModelsToRequestLiså1  0x40D66B
 #define HOOKSIZE_CStreaming__AddModelsToRequestLiså1 0x5
-static std::size_t CStreaming__AddModelsToRequestList1_CONTINUE = 0x40D578;
+static std::uint32_t CStreaming__AddModelsToRequestList1_CONTINUE = 0x40D578;
 void __declspec(naked) HOOK_CStreaming__AddModelsToRequestLiså1()
 {
     _asm {
@@ -195,7 +209,7 @@ void __declspec(naked) HOOK_CStreaming__AddModelsToRequestLiså1()
 
 #define HOOKPOS_CStreaming__AddModelsToRequestLiså2  0x40D66B
 #define HOOKSIZE_CStreaming__AddModelsToRequestLiså2 0x5
-static std::size_t CStreaming__AddModelsToRequestList2_CONTINUE = 0x40D686;
+static std::uint32_t CStreaming__AddModelsToRequestList2_CONTINUE = 0x40D686;
 void __declspec(naked) HOOK_CStreaming__AddModelsToRequestLiså2()
 {
     _asm {
@@ -218,7 +232,7 @@ void __declspec(naked) HOOK_CStreaming__AddModelsToRequestLiså2()
 
 #define HOOKPOS_CStreaming__DeleteAllRwObjects1  0x409125
 #define HOOKSIZE_CStreaming__DeleteAllRwObjects1 0x5
-static std::size_t CStreaming__CStreaming__DeleteAllRwObjects1_CONTINUE = 0x409133;
+static std::uint32_t CStreaming__CStreaming__DeleteAllRwObjects1_CONTINUE = 0x409133;
 void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects1()
 {
     _asm {
@@ -234,7 +248,7 @@ void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects1()
 
 #define HOOKPOS_CStreaming__DeleteAllRwObjects2  0x40913F
 #define HOOKSIZE_CStreaming__DeleteAllRwObjects2 0x5
-static std::size_t CStreaming__CStreaming__DeleteAllRwObjects2_CONTINUE = 0x40914C;
+static std::uint32_t CStreaming__CStreaming__DeleteAllRwObjects2_CONTINUE = 0x40914C;
 void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects2()
 {
     _asm {
@@ -251,7 +265,7 @@ void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects2()
 
 #define HOOKPOS_CStreaming__DeleteAllRwObjects3  0x4091AA
 #define HOOKSIZE_CStreaming__DeleteAllRwObjects3 0x5
-static std::size_t CStreaming__CStreaming__DeleteAllRwObjects3_CONTINUE = 0x4091C3;
+static std::uint32_t CStreaming__CStreaming__DeleteAllRwObjects3_CONTINUE = 0x4091C3;
 void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects3()
 {
     _asm {
@@ -274,9 +288,9 @@ void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects3()
 
 #define HOOKPOS_CStreaming__DeleteAllRwObjects4  0x4091E7
 #define HOOKSIZE_CStreaming__DeleteAllRwObjects4 0x5
-static std::size_t CStreaming__CStreaming__DeleteAllRwObjects4_LOOP_Y = 0x409125;
-static std::size_t CStreaming__CStreaming__DeleteAllRwObjects4_LOOP_X = 0x409110;
-static std::size_t CStreaming__CStreaming__DeleteAllRwObjects4_CONTINUE = 0x4091F8;
+static std::uint32_t CStreaming__CStreaming__DeleteAllRwObjects4_LOOP_Y = 0x409125;
+static std::uint32_t CStreaming__CStreaming__DeleteAllRwObjects4_LOOP_X = 0x409110;
+static std::uint32_t CStreaming__CStreaming__DeleteAllRwObjects4_CONTINUE = 0x4091F8;
 void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects4()
 {
     _asm {
@@ -294,10 +308,58 @@ void __declspec(naked) HOOK_CStreaming__DeleteAllRwObjects4()
     }
 }
 
-void CEntityScanExtenter::StaticSetHooks()
+static void DeleteRwObjectsInSectorList(CPtrNodeDoubleListSAInterface<CEntitySAInterface> &list)
+{
+    auto nextNode = list.GetNode();
+    while (nextNode)
+    {
+        if (!nextNode->pItem->bImBeingRendered && !nextNode->pItem->bStreamingDontDelete)
+            nextNode->pItem->DeleteRwObject();
+        nextNode = nextNode->pNext;
+    }
+}
+
+static CRepeatSector* GetRepeatSector(int32 x, int32 y)
+{
+    return &DEFAULT_REPEAT_SECTORS[y % MAX_REPEAT_SECTORS_Y][x % MAX_REPEAT_SECTORS_X];
+}
+
+// Is this code ever used?
+#define HOOKPOS_CStreaming__DeleteRwObjectsAfterDeath 0x409210
+#define HOOKSIZE_CStreaming__DeleteRwObjectsAfterDeath 0x5
+
+// Deletes all RW objects more than 3 sectors (on each axis) away from the given point's sector
+static void HOOK_CStreaming__DeleteRwObjectsAfterDeath(const CVector2D& point)
+{
+    const std::int32_t pointSecX = instance->GetSectorX(point.fX);
+    const std::int32_t pointSecY = instance->GetSectorY(point.fY);
+    for (int32 sx = 0; sx < instance->GetSectorsX(); ++sx)
+    {
+        if (std::abs(pointSecX - sx) > 3)
+        {
+            for (int32 sy = 0; sy < instance->GetSectorsY(); ++sy)
+            {
+                if (std::abs(pointSecY - sy) > 3)
+                {
+                    CRepeatSector* repeatSector = GetRepeatSector(sx, sy);
+                    CSector*       sector = instance->GetSector(sx, sy);
+                    DeleteRwObjectsInSectorList(sector->m_buildings);
+                    DeleteRwObjectsInSectorList(repeatSector->GetList(REPEATSECTOR_OBJECTS));
+                    DeleteRwObjectsInSectorList(sector->m_dummies);
+                }
+            }
+        }
+    }
+}
+
+void CEntityScanExtenter::Initialize()
 {
     instance = std::make_unique<CEntityScanExtenter>();
+    StaticSetHooks();
+}
 
+void CEntityScanExtenter::StaticSetHooks()
+{
     EZHookInstall(CRenderer__SetupScanLists);
     EZHookInstall(CStreaming__AddModelsToRequestLiså1);
     EZHookInstall(CStreaming__AddModelsToRequestLiså2);
@@ -305,5 +367,6 @@ void CEntityScanExtenter::StaticSetHooks()
     EZHookInstall(CStreaming__DeleteAllRwObjects2);
     EZHookInstall(CStreaming__DeleteAllRwObjects3);
     EZHookInstall(CStreaming__DeleteAllRwObjects4);
+    EZHookInstall(CStreaming__DeleteRwObjectsAfterDeath);
     EZHookInstall(GetSector);
 }

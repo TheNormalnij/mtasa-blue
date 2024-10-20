@@ -22,9 +22,9 @@ enum eRepeatSectorList : std::int32_t
 class CRepeatSector
 {
 public:
-    CPtrNodeDoubleListSAInterface<CEntitySAInterface*>& GetList(eRepeatSectorList type) noexcept { return m_lists[type]; }
+    CPtrNodeDoubleListSAInterface<CEntitySAInterface>& GetList(eRepeatSectorList type) noexcept { return m_lists[type]; }
 
-    const CPtrNodeDoubleListSAInterface<CEntitySAInterface*>& GetList(eRepeatSectorList type) const noexcept { return m_lists[type]; }
+    const CPtrNodeDoubleListSAInterface<CEntitySAInterface>& GetList(eRepeatSectorList type) const noexcept { return m_lists[type]; }
     // private: Preferrably use the accessor method
-    CPtrNodeDoubleListSAInterface<CEntitySAInterface*> m_lists[3];
+    CPtrNodeDoubleListSAInterface<CEntitySAInterface> m_lists[3];
 };

@@ -243,7 +243,7 @@ CGameSA::CGameSA()
     D3DResourceSystemSA::StaticSetHooks();
     CVehicleSA::StaticSetHooks();
     CCheckpointSA::StaticSetHooks();
-    CEntityScanExtenter::StaticSetHooks();
+    CEntityScanExtenter::Initialize();
 }
 
 CGameSA::~CGameSA()
