@@ -132,6 +132,12 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x4085C5 + 2, &m_halfSectorsY);
     MemPut(0x40860D + 2, &m_halfSectorsX);
     MemPut(0x40865E + 2, &m_halfSectorsY);
+
+    // CTaskSimpleClimb::ScanToGrab
+    MemPut(0x67FE38 + 2, &m_halfSectorsX);
+    MemPut(0x67FE5F + 2, &m_halfSectorsY);
+    MemPut(0x67FE84 + 2, &m_halfSectorsX);
+    MemPut(0x67FEAB + 2, &m_halfSectorsY);
 }
 
 void CEntityScanExtenter::PatchDynamic()
@@ -157,6 +163,9 @@ void CEntityScanExtenter::PatchDynamic()
     MemPut(0x408627 + 1, CURRENT_SECTORS_X_MINUS_ONE);
     MemPut(0x4086FF + 3, DEFAULT_SECTORS);
     MemPut(0x408706 + 3, DEFAULT_SECTORS);
+
+    // CTaskSimpleClimb::ScanToGrab
+    MemPut(0x67FF5D + 3, DEFAULT_SECTORS);
     int i = 10;
 }
 
@@ -600,6 +609,29 @@ void __declspec(naked) HOOK_CStreaming__InstanceLoadedModels2()
     }
 }
 
+#define HOOKPOS_CTaskSimpleClimb__ScanToGrab  0x67FF40
+#define HOOKSIZE_CTaskSimpleClimb__ScanToGrab 0x5
+static std::uint32_t CTaskSimpleClimb__ScanToGrab_CONTINUE = 0x67FF5B;
+void __declspec(naked) HOOK_CTaskSimpleClimb__ScanToGrab()
+{
+    _asm {
+            mov edx, CURRENT_SECTORS_X_MINUS_ONE
+            cmp ecx, edx
+            jl nextCheck
+            mov ecx, edx
+        nextCheck:
+            mov edx, CURRENT_SECTORS_Y_MINUS_ONE
+            mov eax, [esp+0x38]
+            cmp eax, edx
+            jl calcTable
+            mov eax, edx
+        calcTable:
+            inc edx
+            imul eax, edx
+            jmp CTaskSimpleClimb__ScanToGrab_CONTINUE
+    }
+}
+
 void CEntityScanExtenter::Initialize()
 {
     instance = std::make_unique<CEntityScanExtenter>();
@@ -619,5 +651,6 @@ void CEntityScanExtenter::StaticSetHooks()
     EZHookInstall(CStreaming__DeleteRwObjectsBehindCamera);
     EZHookInstall(CStreaming__InstanceLoadedModels1);
     EZHookInstall(CStreaming__InstanceLoadedModels2);
+    EZHookInstall(CTaskSimpleClimb__ScanToGrab);
     EZHookInstall(GetSector);
 }
