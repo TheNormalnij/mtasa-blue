@@ -80,9 +80,13 @@ public:
 class CCameraSAInterface
 {
 public:
+    CVector&        GetPosition() { return Placeable.matrix ? Placeable.matrix->GetPosition() : Placeable.m_transform.m_translate; }
+    CVector& GetForward() const { return Placeable.matrix->GetForward(); }
+
+public:
+    std::uint8_t specialPadding[4];            // Temporary padding due to incorrect CPlaceableSAInterface class
     // CPlaceable
     CPlaceableSAInterface Placeable;
-    std::uint8_t          specialPadding[4]; // Temporary padding due to incorrect CPlaceableSAInterface class
     // End CPlaceable
 
     // move these out the class, have decided to set up a mirrored enumerated type thingy at the top

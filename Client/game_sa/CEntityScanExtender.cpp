@@ -10,6 +10,7 @@
 #include "StdInc.h"
 #include "CEntityScanExtender.h"
 #include "CRepeatSectorSAInterface.h"
+#include "CCameraSA.h"
 
 struct tScanLists
 {
@@ -124,6 +125,13 @@ void CEntityScanExtenter::PatchOnce()
 	MemPut(0x4090D7 + 2, &m_halfSectorsX);
     MemPut(0x4090F1 + 2, &m_halfSectorsY);
 
+    // CStreaming::InstanceLoadedModels
+    MemPut(0x40853C + 2, &m_halfSectorsX);
+    MemPut(0x408555 + 2, &m_halfSectorsY);
+    MemPut(0x40856F + 2, &m_halfSectorsX);
+    MemPut(0x4085C5 + 2, &m_halfSectorsY);
+    MemPut(0x40860D + 2, &m_halfSectorsX);
+    MemPut(0x40865E + 2, &m_halfSectorsY);
 }
 
 void CEntityScanExtenter::PatchDynamic()
@@ -145,9 +153,10 @@ void CEntityScanExtenter::PatchDynamic()
 
     MemPut(0x40D68C + 3, DEFAULT_SECTORS);
 
-	// CStreaming::DeleteAllRwObjects
-
-
+    // CStreaming::InstanceLoadedModels
+    MemPut(0x408627 + 1, CURRENT_SECTORS_X_MINUS_ONE);
+    MemPut(0x4086FF + 3, DEFAULT_SECTORS);
+    MemPut(0x408706 + 3, DEFAULT_SECTORS);
     int i = 10;
 }
 
@@ -353,14 +362,23 @@ static void HOOK_CStreaming__DeleteRwObjectsAfterDeath(const CVector2D& point)
     }
 }
 
-// 0x40D7C0
+
+// Untested need a way to trigger this function
+#define HOOKPOS_CStreaming__DeleteRwObjectsBehindCamera  0x40D7C0
+#define HOOKSIZE_CStreaming__DeleteRwObjectsBehindCamera 0x5
+
 // TODO: Decode this, no clue whats going on here..
-void HOOK__CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
+void HOOK_CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
 {
+    // our defenitions
     uint32& ms_memoryUsedBytes = *reinterpret_cast<uint32*>(0x8E4CB4);
     auto    DeleteRwObjectsBehindCameraInSectorList = (bool(__cdecl*)(CPtrNodeDoubleListSAInterface<CEntitySAInterface>&, size_t))0x409940;
     auto    DeleteRwObjectsNotInFrustumInSectorList = (bool(__cdecl*)(CPtrNodeDoubleListSAInterface<CEntitySAInterface>&, size_t))0x4099E0;
     auto    CWorld__IncrementCurrentScanCode = (void (*)())0x4072E0;
+    auto    RemoveLeastUsedModel = (bool(__cdecl*)(int32_t))0x40CFD0;
+    auto    RemoveReferencedTxds = (bool(__cdecl*)(int32_t))0x40D2F0;
+    auto & TheCamera = *reinterpret_cast<CCameraSAInterface*>(0xB6F028);
+    // mta-reverse-modern code
 
     if (ms_memoryUsedBytes < memoryToCleanInBytes)
         return;
@@ -369,9 +387,9 @@ void HOOK__CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
     const auto END_OFFSET_XY = 2;
 
     const CVector&   cameraPos = TheCamera.GetPosition();
-    const int32      pointSecX = instance->GetSectorX(cameraPos.x), pointSecY = instance->GetSectorY(cameraPos.y);
+    const int32      pointSecX = instance->GetSectorX(cameraPos.fX), pointSecY = instance->GetSectorY(cameraPos.fY);
     const CVector2D& camFwd = TheCamera.GetForward();
-    if (std::fabs(camFwd.y) < std::fabs(camFwd.x))
+    if (std::fabs(camFwd.fY) < std::fabs(camFwd.fX))
     {
         int32 sectorStartY = std::max(pointSecY - START_OFFSET_XY, 0);
         int32 sectorEndY = std::min(pointSecY + START_OFFSET_XY, MAX_SECTORS_Y - 1);
@@ -379,7 +397,7 @@ void HOOK__CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
         int32 sectorEndX = 0;
         int32 factorX = 0;
 
-        if (camFwd.x <= 0.0f)
+        if (camFwd.fX <= 0.0f)
         {
             sectorStartX = std::min(pointSecX + START_OFFSET_XY, MAX_SECTORS_X - 1);
             sectorEndX = std::min(pointSecX + END_OFFSET_XY, MAX_SECTORS_X - 1);
@@ -408,7 +426,7 @@ void HOOK__CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
             }
         }
 
-        if (camFwd.x <= 0.0f)
+        if (camFwd.fX <= 0.0f)
         {
             sectorEndX = std::min(pointSecX + END_OFFSET_XY, MAX_SECTORS_X - 1);
             sectorStartX = std::max(pointSecX - START_OFFSET_XY, 0);
@@ -460,7 +478,7 @@ void HOOK__CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
         int32 sectorStartY = 0;
         int32 sectorEndY = 0;
         int32 factorY = 0;
-        if (camFwd.y <= 0.0f)
+        if (camFwd.fY <= 0.0f)
         {
             sectorEndY = std::min(pointSecY + END_OFFSET_XY, MAX_SECTORS_Y - 1);
             sectorStartY = std::min(pointSecY + START_OFFSET_XY, MAX_SECTORS_Y - 1);
@@ -487,7 +505,7 @@ void HOOK__CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
                 }
             }
         }
-        if (camFwd.y <= 0.0f)
+        if (camFwd.fY <= 0.0f)
         {
             sectorEndY = std::min(pointSecY + END_OFFSET_XY, MAX_SECTORS_Y - 1);
             sectorStartY = std::max(pointSecY - START_OFFSET_XY, 0);
@@ -515,7 +533,6 @@ void HOOK__CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
             }
         }
 
-        auto RemoveReferencedTxds = (bool(__cdecl*)(int32_t))0x40D2F0;
         if (RemoveReferencedTxds(memoryToCleanInBytes))
             return;
 
@@ -538,7 +555,6 @@ void HOOK__CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
 
     while (ms_memoryUsedBytes >= memoryToCleanInBytes)
     {
-        auto RemoveLeastUsedModel = (bool(__cdecl*)(int32_t))0x40CFD0;
         if (!RemoveLeastUsedModel(0))
         {
             break;
@@ -546,6 +562,43 @@ void HOOK__CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
     }
 }
 
+// untested
+
+#define HOOKPOS_CStreaming__InstanceLoadedModels1  0x408651
+#define HOOKSIZE_CStreaming__InstanceLoadedModels1 0x7
+static std::uint32_t CStreaming__InstanceLoadedModels1_CONTINUE = 0x408658;
+void __declspec(naked) HOOK_CStreaming__InstanceLoadedModels1()
+{
+    _asm {
+        mov edi, CURRENT_SECTORS_Y_MINUS_ONE
+        fld [esp+0x18]
+        sub esp, 8
+        jmp CStreaming__InstanceLoadedModels1_CONTINUE
+    }
+}
+
+#define HOOKPOS_CStreaming__InstanceLoadedModels2  0x4086E2
+#define HOOKSIZE_CStreaming__InstanceLoadedModels2 0x5
+static std::uint32_t CStreaming__InstanceLoadedModels2_CONTINUE = 0x4086FD;
+void __declspec(naked) HOOK_CStreaming__InstanceLoadedModels2()
+{
+    _asm {
+            mov esi, CURRENT_SECTORS_X_MINUS_ONE
+            cmp ecx, esi
+            jl nextCheck
+            mov ecx, esi
+        nextCheck:
+            mov esi, CURRENT_SECTORS_Y_MINUS_ONE
+            mov eax, [esp+0x20]
+            cmp eax, esi
+            jl calcTable
+            mov eax, esi
+        calcTable:
+            inc esi
+            imul eax, esi
+            jmp CStreaming__InstanceLoadedModels2_CONTINUE
+    }
+}
 
 void CEntityScanExtenter::Initialize()
 {
@@ -563,5 +616,8 @@ void CEntityScanExtenter::StaticSetHooks()
     EZHookInstall(CStreaming__DeleteAllRwObjects3);
     EZHookInstall(CStreaming__DeleteAllRwObjects4);
     EZHookInstall(CStreaming__DeleteRwObjectsAfterDeath);
+    EZHookInstall(CStreaming__DeleteRwObjectsBehindCamera);
+    EZHookInstall(CStreaming__InstanceLoadedModels1);
+    EZHookInstall(CStreaming__InstanceLoadedModels2);
     EZHookInstall(GetSector);
 }

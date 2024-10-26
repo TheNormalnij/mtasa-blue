@@ -33,6 +33,9 @@ public:
 
     CMatrix_Padded(const CMatrix& Matrix) { SetFromMatrix(Matrix); }
 
+    CVector& GetPosition() { return vPos; }
+    CVector& GetForward() { return vFront; }
+
     void ConvertToMatrix(CMatrix& Matrix) const
     {
         Matrix.vPos = vPos;
