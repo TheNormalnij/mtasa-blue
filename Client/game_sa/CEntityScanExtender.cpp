@@ -138,6 +138,12 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x67FE5F + 2, &m_halfSectorsY);
     MemPut(0x67FE84 + 2, &m_halfSectorsX);
     MemPut(0x67FEAB + 2, &m_halfSectorsY);
+
+    // CWorld::FindObjectsOfTypeInRange
+    MemPut(0x564C8A + 2, &m_halfSectorsX);
+    MemPut(0x564CB0 + 2, &m_halfSectorsY);
+    MemPut(0x564CD1 + 2, &m_halfSectorsX);
+    MemPut(0x564CF5 + 2, &m_halfSectorsY);
 }
 
 void CEntityScanExtenter::PatchDynamic()
@@ -166,7 +172,9 @@ void CEntityScanExtenter::PatchDynamic()
 
     // CTaskSimpleClimb::ScanToGrab
     MemPut(0x67FF5D + 3, DEFAULT_SECTORS);
-    int i = 10;
+
+    // CWorld::FindObjectsOfTypeInRange
+    MemPut(0x564DA9 + 3, DEFAULT_SECTORS);
 }
 
 // Missing in C++14
@@ -632,6 +640,30 @@ void __declspec(naked) HOOK_CTaskSimpleClimb__ScanToGrab()
     }
 }
 
+// untested (unused?)
+#define HOOKPOS_CWorld__FindObjectsOfTypeInRange  0x564D8C
+#define HOOKSIZE_CWorld__FindObjectsOfTypeInRange 0x5
+static std::uint32_t CWorld__FindObjectsOfTypeInRange_CONTINUE = 0x564DA7;
+void __declspec(naked) HOOK_CWorld__FindObjectsOfTypeInRange()
+{
+    _asm {
+            mov esi, CURRENT_SECTORS_X_MINUS_ONE
+            cmp ecx, esi
+            jl nextCheck
+            mov ecx, esi
+        nextCheck:
+            mov esi, CURRENT_SECTORS_Y_MINUS_ONE
+            mov eax, [esp+0x18]
+            cmp eax, esi
+            jl calcTable
+            mov eax, esi
+        calcTable:
+            inc esi
+            imul eax, esi
+            jmp CWorld__FindObjectsOfTypeInRange_CONTINUE
+    }
+}
+
 void CEntityScanExtenter::Initialize()
 {
     instance = std::make_unique<CEntityScanExtenter>();
@@ -652,5 +684,6 @@ void CEntityScanExtenter::StaticSetHooks()
     EZHookInstall(CStreaming__InstanceLoadedModels1);
     EZHookInstall(CStreaming__InstanceLoadedModels2);
     EZHookInstall(CTaskSimpleClimb__ScanToGrab);
+    EZHookInstall(CWorld__FindObjectsOfTypeInRange);
     EZHookInstall(GetSector);
 }
