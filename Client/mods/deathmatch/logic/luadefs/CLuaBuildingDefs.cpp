@@ -45,8 +45,8 @@ CClientBuilding* CLuaBuildingDefs::CreateBuilding(lua_State* const luaVM, std::u
     if (!CClientBuildingManager::IsValidModel(modelId))
         throw std::invalid_argument("Invalid building model id");
 
-    //if (!CClientBuildingManager::IsValidPosition(pos))
-        //throw std::invalid_argument("Position is outside of game world");
+    if (!CClientBuildingManager::IsValidPosition(pos))
+        throw std::invalid_argument("Position is outside of game world");
 
     if (rot.has_value())
         ConvertDegreesToRadians(rot.value());
