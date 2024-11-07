@@ -25,7 +25,7 @@ const auto MAX_REPEAT_SECTORS_X = 16;
 const auto MAX_REPEAT_SECTORS_Y = 16;
 
 static CRepeatSector (&DEFAULT_REPEAT_SECTORS)[MAX_REPEAT_SECTORS_Y][MAX_REPEAT_SECTORS_X] = *(CRepeatSector(*)[16][16])0xB992B8;
-static CSector       (&DEFAULT_SECTORS)[MAX_SECTORS_Y][MAX_SECTORS_X] = *(CSector(*)[MAX_SECTORS_Y][MAX_SECTORS_X])0xB7D0B8;
+static CSector       (&DEFAULT_SECTORS)[120][120] = *(CSector(*)[120][120])0xB7D0B8;
 static CSector*      CURRENT_SECTORS = reinterpret_cast<CSector*>(DEFAULT_SECTORS);
 static auto*         SCAN_LIST = (tScanLists*)0xC8E0C8;
 
@@ -33,8 +33,8 @@ static std::unique_ptr<CEntityScanExtenter> instance;
 
 static std::uint32_t CURRENT_SECTORS_X = 120;
 static std::uint32_t CURRENT_SECTORS_Y = 120;
-static std::uint32_t CURRENT_SECTORS_X_MINUS_ONE = 119;
-static std::uint32_t CURRENT_SECTORS_Y_MINUS_ONE = 119;
+static std::int32_t CURRENT_SECTORS_X_MINUS_ONE = 119;
+static std::int32_t CURRENT_SECTORS_Y_MINUS_ONE = 119;
 
 CEntityScanExtenter::CEntityScanExtenter()
 {
@@ -444,15 +444,15 @@ void HOOK_CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
     if (std::fabs(camFwd.fY) < std::fabs(camFwd.fX))
     {
         int32 sectorStartY = std::max(pointSecY - START_OFFSET_XY, 0);
-        int32 sectorEndY = std::min(pointSecY + START_OFFSET_XY, MAX_SECTORS_Y - 1);
+        int32 sectorEndY = std::min(pointSecY + START_OFFSET_XY, CURRENT_SECTORS_Y_MINUS_ONE);
         int32 sectorStartX = 0;
         int32 sectorEndX = 0;
         int32 factorX = 0;
 
         if (camFwd.fX <= 0.0f)
         {
-            sectorStartX = std::min(pointSecX + START_OFFSET_XY, MAX_SECTORS_X - 1);
-            sectorEndX = std::min(pointSecX + END_OFFSET_XY, MAX_SECTORS_X - 1);
+            sectorStartX = std::min(pointSecX + START_OFFSET_XY, CURRENT_SECTORS_X_MINUS_ONE);
+            sectorEndX = std::min(pointSecX + END_OFFSET_XY, CURRENT_SECTORS_X_MINUS_ONE);
             factorX = -1;
         }
         else
@@ -480,14 +480,14 @@ void HOOK_CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
 
         if (camFwd.fX <= 0.0f)
         {
-            sectorEndX = std::min(pointSecX + END_OFFSET_XY, MAX_SECTORS_X - 1);
+            sectorEndX = std::min(pointSecX + END_OFFSET_XY, CURRENT_SECTORS_X_MINUS_ONE);
             sectorStartX = std::max(pointSecX - START_OFFSET_XY, 0);
             factorX = -1;
         }
         else
         {
             sectorEndX = std::max(pointSecX - END_OFFSET_XY, 0);
-            sectorStartX = std::min(pointSecX + START_OFFSET_XY, MAX_SECTORS_X - 1);
+            sectorStartX = std::min(pointSecX + START_OFFSET_XY, CURRENT_SECTORS_X_MINUS_ONE);
             factorX = +1;
         }
 
@@ -526,14 +526,14 @@ void HOOK_CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
     else
     {
         int32 sectorStartX = std::max(pointSecX - START_OFFSET_XY, 0);
-        int32 sectorEndX = std::min(pointSecX + START_OFFSET_XY, MAX_SECTORS_X - 1);
+        int32 sectorEndX = std::min(pointSecX + START_OFFSET_XY, CURRENT_SECTORS_X_MINUS_ONE);
         int32 sectorStartY = 0;
         int32 sectorEndY = 0;
         int32 factorY = 0;
         if (camFwd.fY <= 0.0f)
         {
-            sectorEndY = std::min(pointSecY + END_OFFSET_XY, MAX_SECTORS_Y - 1);
-            sectorStartY = std::min(pointSecY + START_OFFSET_XY, MAX_SECTORS_Y - 1);
+            sectorEndY = std::min(pointSecY + END_OFFSET_XY, CURRENT_SECTORS_Y_MINUS_ONE);
+            sectorStartY = std::min(pointSecY + START_OFFSET_XY, CURRENT_SECTORS_Y_MINUS_ONE);
             factorY = -1;
         }
         else
@@ -559,14 +559,14 @@ void HOOK_CStreaming__DeleteRwObjectsBehindCamera(size_t memoryToCleanInBytes)
         }
         if (camFwd.fY <= 0.0f)
         {
-            sectorEndY = std::min(pointSecY + END_OFFSET_XY, MAX_SECTORS_Y - 1);
+            sectorEndY = std::min(pointSecY + END_OFFSET_XY, CURRENT_SECTORS_Y_MINUS_ONE);
             sectorStartY = std::max(pointSecY - START_OFFSET_XY, 0);
             factorY = -1;
         }
         else
         {
             sectorEndY = std::max(pointSecY - END_OFFSET_XY, 0);
-            sectorStartY = std::min(pointSecY + START_OFFSET_XY, MAX_SECTORS_Y - 1);
+            sectorStartY = std::min(pointSecY + START_OFFSET_XY, CURRENT_SECTORS_Y_MINUS_ONE);
             factorY = +1;
         }
         CWorld__IncrementCurrentScanCode();

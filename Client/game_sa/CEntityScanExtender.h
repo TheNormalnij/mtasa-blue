@@ -12,9 +12,6 @@
 #include "CBuildingSA.h"
 #include <memory>
 
-constexpr auto MAX_SECTORS_Y = 120;
-constexpr auto MAX_SECTORS_X = 120;
-
 struct CSector
 {
     CPtrNodeDoubleListSAInterface<CEntitySAInterface> m_buildings;
