@@ -66,3 +66,14 @@ struct SPokeInfo
     DWORD dwAddress;
     BYTE  ucValue;
 };
+
+#define JMP_ABSOLUTE(addr) \
+    { \
+        static const std::size_t jumpPos = addr; \
+        _asm jmp                 jumpPos \
+    }
+
+#define JMP_ABSOLUTE_ASM(addr) \
+    } \
+    JMP_ABSOLUTE(addr) \
+    _asm {

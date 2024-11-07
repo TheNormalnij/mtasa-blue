@@ -210,6 +210,10 @@ void CEntityScanExtenter::PatchDynamic()
 
     // CWorld::FindObjectsOfTypeInRange
     MemPut(0x564DA9 + 3, CURRENT_SECTORS);
+
+    // CCollision::CheckCameraCollisionBuildings
+    MemPut(0x41A85A + 3, CURRENT_SECTORS);
+    MemPut(0x41A861 + 3, CURRENT_SECTORS);
 }
 
 // Missing in C++14
@@ -699,6 +703,34 @@ void __declspec(naked) HOOK_CWorld__FindObjectsOfTypeInRange()
     }
 }
 
+#define HOOKPOS_CCollision__CheckCameraCollisionBuildings  0x41A831
+#define HOOKSIZE_CCollision__CheckCameraCollisionBuildings 0x5
+void __declspec(naked) HOOK_CCollision__CheckCameraCollisionBuildings()
+{
+    _asm {
+            mov edx, CURRENT_SECTORS_X_MINUS_ONE
+            cmp ecx, edx
+            jl next
+            mov ecx, edx
+        next:
+            mov eax, [esp+0x28] ; original code
+            xor edx, edx
+            test eax, eax
+            setle dl
+            dec edx
+            and eax, edx ; original code end
+
+            mov edx, CURRENT_SECTORS_Y_MINUS_ONE
+            cmp eax, edx
+            jl calcTable
+            mov eax, edx
+        calcTable:
+            inc edx
+            imul eax, edx
+            JMP_ABSOLUTE_ASM(0x41A856)
+    }
+}
+
 void CEntityScanExtenter::Initialize()
 {
     instance = std::make_unique<CEntityScanExtenter>();
@@ -720,5 +752,6 @@ void CEntityScanExtenter::StaticSetHooks()
     EZHookInstall(CStreaming__InstanceLoadedModels2);
     EZHookInstall(CTaskSimpleClimb__ScanToGrab);
     EZHookInstall(CWorld__FindObjectsOfTypeInRange);
+    EZHookInstall(CCollision__CheckCameraCollisionBuildings);
     EZHookInstall(GetSector);
 }
