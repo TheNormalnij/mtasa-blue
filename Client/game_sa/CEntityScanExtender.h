@@ -30,7 +30,7 @@ public:
     CSector* GetSector(std::uint32_t x, std::uint32_t y) const noexcept;
 
     CSector* GetSectorResize(std::uint32_t x, std::uint32_t y);
-    void     Resize(std::size_t count);
+    void     Resize(std::size_t sectorsX, std::size_t sectorsY);
 
     static void Initialize();
 
@@ -49,8 +49,6 @@ private:
 private:
     std::size_t m_SectorsW{6000};
     std::size_t m_SectorsH{6000};
-    std::size_t m_SectorsHalfW{3000};
-    std::size_t m_SectorsHalfH{3000};
 
     float m_halfSectorsX{60.f};
     float m_halfSectorsY{60.f};

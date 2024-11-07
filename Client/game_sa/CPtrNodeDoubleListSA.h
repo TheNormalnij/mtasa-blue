@@ -23,6 +23,7 @@ template <class T>
 class CPtrNodeDoubleListSAInterface
 {
 public:
+    CPtrNodeDoubleListSAInterface(): m_pNode{nullptr} {};
 
     void RemoveItem(T* pItem)
     {

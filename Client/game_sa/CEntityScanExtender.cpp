@@ -26,6 +26,7 @@ const auto MAX_REPEAT_SECTORS_Y = 16;
 
 static CRepeatSector (&DEFAULT_REPEAT_SECTORS)[MAX_REPEAT_SECTORS_Y][MAX_REPEAT_SECTORS_X] = *(CRepeatSector(*)[16][16])0xB992B8;
 static CSector       (&DEFAULT_SECTORS)[MAX_SECTORS_Y][MAX_SECTORS_X] = *(CSector(*)[MAX_SECTORS_Y][MAX_SECTORS_X])0xB7D0B8;
+static CSector*      CURRENT_SECTORS = reinterpret_cast<CSector*>(DEFAULT_SECTORS);
 static auto*         SCAN_LIST = (tScanLists*)0xC8E0C8;
 
 static std::unique_ptr<CEntityScanExtenter> instance;
@@ -39,7 +40,7 @@ CEntityScanExtenter::CEntityScanExtenter()
 {
     PatchOnce();
     // Only for tests
-    PatchDynamic();
+    Resize(160, 160);
 }
 
 bool CEntityScanExtenter::IsInWorldSector(std::int32_t x, std::int32_t y) const noexcept
@@ -49,7 +50,7 @@ bool CEntityScanExtenter::IsInWorldSector(std::int32_t x, std::int32_t y) const 
 
 CSector* CEntityScanExtenter::GetSector(std::uint32_t x, std::uint32_t y) const noexcept
 {
-    return &DEFAULT_SECTORS[y][x];
+    return &CURRENT_SECTORS[y * CURRENT_SECTORS_X + x];
 }
 
 std::uint32_t CEntityScanExtenter::GetSectorsX() const noexcept
@@ -70,8 +71,37 @@ CSector* CEntityScanExtenter::GetSectorResize(std::uint32_t x, std::uint32_t y)
     return GetSector(x, y);
 }
 
-void CEntityScanExtenter::Resize(std::size_t count)
+void CEntityScanExtenter::Resize(std::size_t sectorsX, std::size_t sectorsY)
 {
+    for (auto x = 0; x < CURRENT_SECTORS_X; x++)
+        for (auto y = 0; y < CURRENT_SECTORS_Y; y++)
+        {
+            CURRENT_SECTORS->m_buildings.RemoveAllItems();
+            CURRENT_SECTORS->m_dummies.RemoveAllItems();
+        }
+
+    if (CURRENT_SECTORS != reinterpret_cast<CSector*>(DEFAULT_SECTORS))
+        delete[] CURRENT_SECTORS;
+
+    CURRENT_SECTORS = new CSector[sectorsY * sectorsX];
+
+    CURRENT_SECTORS_X = sectorsX;
+    CURRENT_SECTORS_Y = sectorsY;
+
+    CURRENT_SECTORS_X_MINUS_ONE = CURRENT_SECTORS_X - 1;
+    CURRENT_SECTORS_Y_MINUS_ONE = CURRENT_SECTORS_Y - 1;
+
+    m_SectorsW = sectorsX * 50;
+    m_SectorsH = sectorsY * 50;
+
+    m_halfSectorsX = sectorsX / 2.0f;
+    m_halfSectorsY = sectorsY / 2.0f;
+
+    m_woldLeft = -(m_SectorsW / 2.0f);
+    m_woldRight = m_SectorsW / 2.0f;
+    m_woldTop = -(m_SectorsH / 2.0f);
+    m_woldBottom = m_SectorsH / 2.0f;
+
     PatchDynamic();
 }
 
@@ -163,18 +193,23 @@ void CEntityScanExtenter::PatchDynamic()
 
 	MemPut(0x40D547 + 1, std::uint32_t(m_halfSectorsX - 1.f));
 
-    MemPut(0x40D68C + 3, DEFAULT_SECTORS);
+    MemPut(0x40D68C + 3, CURRENT_SECTORS);
+
+    // CStreaming::DeleteAllRwObjects
+
+    MemPut(0x40914E + 3, CURRENT_SECTORS);
+    MemPut(0x4091C5 + 3, CURRENT_SECTORS);
 
     // CStreaming::InstanceLoadedModels
     MemPut(0x408627 + 1, CURRENT_SECTORS_X_MINUS_ONE);
-    MemPut(0x4086FF + 3, DEFAULT_SECTORS);
-    MemPut(0x408706 + 3, DEFAULT_SECTORS);
+    MemPut(0x4086FF + 3, CURRENT_SECTORS);
+    MemPut(0x408706 + 3, CURRENT_SECTORS);
 
     // CTaskSimpleClimb::ScanToGrab
-    MemPut(0x67FF5D + 3, DEFAULT_SECTORS);
+    MemPut(0x67FF5D + 3, CURRENT_SECTORS);
 
     // CWorld::FindObjectsOfTypeInRange
-    MemPut(0x564DA9 + 3, DEFAULT_SECTORS);
+    MemPut(0x564DA9 + 3, CURRENT_SECTORS);
 }
 
 // Missing in C++14
