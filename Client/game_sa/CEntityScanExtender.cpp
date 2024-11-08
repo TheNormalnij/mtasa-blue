@@ -214,6 +214,10 @@ void CEntityScanExtenter::PatchDynamic()
     // CCollision::CheckCameraCollisionBuildings
     MemPut(0x41A85A + 3, CURRENT_SECTORS);
     MemPut(0x41A861 + 3, CURRENT_SECTORS);
+
+    // CWorld::ClearScanCodes
+    MemPut(0x563470 + 1, CURRENT_SECTORS);
+
 }
 
 // Missing in C++14
