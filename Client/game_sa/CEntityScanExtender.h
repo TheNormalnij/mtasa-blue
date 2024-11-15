@@ -27,6 +27,8 @@ public:
     CSector* GetSector(std::uint32_t x, std::uint32_t y) const noexcept;
 
     CSector* GetSectorResize(std::uint32_t x, std::uint32_t y);
+    std::uint32_t GetSectorNumResize(std::int32_t x, std::int32_t y);
+    std::uint32_t GetSectorNum(std::uint32_t x, std::uint32_t y);
     void     Resize(std::size_t sectorsX, std::size_t sectorsY);
 
     static void Initialize();

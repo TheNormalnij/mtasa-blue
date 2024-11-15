@@ -36,11 +36,22 @@ static std::uint32_t CURRENT_SECTORS_Y = 120;
 static std::int32_t CURRENT_SECTORS_X_MINUS_ONE = 119;
 static std::int32_t CURRENT_SECTORS_Y_MINUS_ONE = 119;
 
+// Missing in C++14
+static std::int32_t clamp(std::int32_t v, std::int32_t min, std::int32_t max)
+{
+    if (v < min)
+        return min;
+    if (v > max)
+        return max;
+
+    return v;
+}
+
 CEntityScanExtenter::CEntityScanExtenter()
 {
     PatchOnce();
     // Only for tests
-    Resize(160, 160);
+    Resize(120, 120);
 }
 
 bool CEntityScanExtenter::IsInWorldSector(std::int32_t x, std::int32_t y) const noexcept
@@ -68,7 +79,25 @@ CSector* CEntityScanExtenter::GetSectorResize(std::uint32_t x, std::uint32_t y)
     if (IsInWorldSector(x, y))
         return GetSector(x, y);
 
+    // TODO
     return GetSector(x, y);
+}
+
+std::uint32_t CEntityScanExtenter::GetSectorNumResize(std::int32_t x, std::int32_t y)
+{
+    x = clamp(x, 0, CURRENT_SECTORS_X);
+    y = clamp(y, 0, CURRENT_SECTORS_Y);
+
+    if (IsInWorldSector(x, y))
+        return GetSectorNum(x, y);
+
+    // TODO
+    return GetSectorNum(x, y);
+}
+
+std::uint32_t CEntityScanExtenter::GetSectorNum(std::uint32_t x, std::uint32_t y)
+{
+    return y * CURRENT_SECTORS_X + x;
 }
 
 void CEntityScanExtenter::Resize(std::size_t sectorsX, std::size_t sectorsY)
@@ -183,6 +212,8 @@ void CEntityScanExtenter::PatchDynamic()
     MemPut(0x534826 + 4, m_woldRight - 1.f);
     MemPut(0x53483F + 4, m_woldTop);
     MemPut(0x534858 + 4, m_woldBottom - 1.f);
+    MemPut(0x534A09 + 3, CURRENT_SECTORS);
+    MemPut(0x534A98 + 3, reinterpret_cast<std::uint32_t>(CURRENT_SECTORS) + 4);
 
     // CEntity::Remove
     MemPut(0x534B47 + 4, m_woldRight - 1.f);
@@ -218,17 +249,6 @@ void CEntityScanExtenter::PatchDynamic()
     // CWorld::ClearScanCodes
     MemPut(0x563470 + 1, CURRENT_SECTORS);
 
-}
-
-// Missing in C++14
-static std::int32_t clamp(std::int32_t v, std::int32_t min, std::int32_t max)
-{
-    if (v < min)
-        return min;
-    if (v > max)
-        return max;
-
-    return v;
 }
 
 #define HOOKPOS_GetSector  0x407260
@@ -735,6 +755,37 @@ void __declspec(naked) HOOK_CCollision__CheckCameraCollisionBuildings()
     }
 }
 
+static std::uint32_t __cdecl GetArrayPositionResize(std::int32_t x, std::int32_t y)
+{
+    return instance->GetSectorNumResize(x, y);
+}
+
+#define HOOKPOS_CEntity__Add1  0x5349DB
+#define HOOKSIZE_CEntity__Add1 0x7
+void __declspec(naked) HOOK_CEntity__Add1()
+{
+    _asm {
+        push eax ; y
+        push ecx ; x
+        call GetArrayPositionResize
+        add  esp, 4*2
+        JMP_ABSOLUTE_ASM(0x534A08)
+    }
+}
+
+#define HOOKPOS_CEntity__Add2  0x534A6B
+#define HOOKSIZE_CEntity__Add2 0x7
+void __declspec(naked) HOOK_CEntity__Add2()
+{
+    _asm {
+        push eax
+        push ecx
+        call GetArrayPositionResize
+        add  esp, 4*2
+        JMP_ABSOLUTE_ASM(0x534A98)
+    }
+}
+
 void CEntityScanExtenter::Initialize()
 {
     instance = std::make_unique<CEntityScanExtenter>();
@@ -743,6 +794,8 @@ void CEntityScanExtenter::Initialize()
 
 void CEntityScanExtenter::StaticSetHooks()
 {
+    EZHookInstall(CEntity__Add1);
+    EZHookInstall(CEntity__Add2);
     EZHookInstall(CRenderer__SetupScanLists);
     EZHookInstall(CStreaming__AddModelsToRequestLiså1);
     EZHookInstall(CStreaming__AddModelsToRequestLiså2);
