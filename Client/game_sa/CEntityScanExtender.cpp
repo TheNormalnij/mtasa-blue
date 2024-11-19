@@ -249,6 +249,12 @@ void CEntityScanExtenter::PatchDynamic()
     // CWorld::ClearScanCodes
     MemPut(0x563470 + 1, CURRENT_SECTORS);
 
+    // CWorld::RemoveStaticObjects
+    MemPut(0x563844 + 1, CURRENT_SECTORS);
+
+    // CWorld::ShutDown
+    MemPut(0x563844 + 1, CURRENT_SECTORS);
+
 }
 
 #define HOOKPOS_GetSector  0x407260
@@ -791,6 +797,10 @@ void CEntityScanExtenter::Initialize()
     instance = std::make_unique<CEntityScanExtenter>();
     StaticSetHooks();
 }
+
+// CPhysical::ProcessShiftSectorList
+// CEntity__Remove
+// CPhysical::ProcessCollisionSectorList
 
 void CEntityScanExtenter::StaticSetHooks()
 {
