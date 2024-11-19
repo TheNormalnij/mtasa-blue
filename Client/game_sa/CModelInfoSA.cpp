@@ -977,6 +977,10 @@ void CModelInfoSA::StaticFlushPendingRestreamIPL()
 
     std::set<unsigned short> removedModels;
 
+    int NUM_StreamSectorRows = pGame->GetEntityScanExtender()->GetSectorsX();
+    int NUM_StreamSectorCols = pGame->GetEntityScanExtender()->GetSectorsY();
+    void* ARRAY_StreamSectors = pGame->GetEntityScanExtender()->GetSector(0, 0);
+
     for (int i = 0; i < 2 * NUM_StreamSectorRows * NUM_StreamSectorCols; i++)
     {
         DWORD* pSectorEntry = ((DWORD**)ARRAY_StreamSectors)[i];

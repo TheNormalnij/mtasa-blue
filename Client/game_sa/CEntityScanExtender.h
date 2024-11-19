@@ -7,6 +7,8 @@
  *
  *****************************************************************************/
 
+#pragma once
+
 #include <vector>
 #include "CPtrNodeDoubleListSA.h"
 #include "CBuildingSA.h"
@@ -26,12 +28,10 @@ public:
     bool     IsInWorldSector(std::int32_t x, std::int32_t y) const noexcept;
     CSector* GetSector(std::uint32_t x, std::uint32_t y) const noexcept;
 
-    CSector* GetSectorResize(std::uint32_t x, std::uint32_t y);
+    CSector*      GetSectorResize(std::uint32_t x, std::uint32_t y);
     std::uint32_t GetSectorNumResize(std::int32_t x, std::int32_t y);
     std::uint32_t GetSectorNum(std::uint32_t x, std::uint32_t y);
-    void     Resize(std::size_t sectorsX, std::size_t sectorsY);
-
-    static void Initialize();
+    void          Resize(std::size_t sectorsX, std::size_t sectorsY);
 
     std::int32_t GetSectorX(float x) const noexcept;
     std::int32_t GetSectorY(float x) const noexcept;
@@ -42,8 +42,7 @@ public:
 private:
     void PatchOnce();
     void PatchDynamic();
-
-    static void StaticSetHooks();
+    void SetHooks();
 
 private:
     std::size_t m_SectorsW{6000};

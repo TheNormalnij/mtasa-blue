@@ -18,6 +18,7 @@
 #include "CCoverManagerSA.h"
 #include "CPlantManagerSA.h"
 #include "CRendererSA.h"
+#include "CEntityScanExtender.h"
 
 class CAnimBlendClumpDataSAInterface;
 class CObjectGroupPhysicalPropertiesSA;
@@ -174,6 +175,7 @@ public:
     CPlantManagerSA*          GetPlantManager() const noexcept { return m_pPlantManager; };
     CBuildingRemoval*         GetBuildingRemoval() { return m_pBuildingRemoval; }
     CRenderer*                GetRenderer() const noexcept override { return m_pRenderer.get(); }
+    CEntityScanExtenter*      GetEntityScanExtender() const noexcept { return m_entityScanExtender.get(); }
     
     CWeaponInfo*                    GetWeaponInfo(eWeaponType weapon, eWeaponSkill skill = WEAPONSKILL_STD);
     CModelInfo*                     GetModelInfo(DWORD dwModelID, bool bCanBeInvalid = false);
@@ -363,6 +365,8 @@ private:
     CCarEnterExit*            m_pCarEnterExit;
     CControllerConfigManager* m_pControllerConfigManager;
     CIplStore*                m_pIplStore;
+
+    std::unique_ptr<CEntityScanExtenter> m_entityScanExtender;
 
     eGameVersion m_eGameVersion;
     bool         m_bAsyncScriptEnabled;

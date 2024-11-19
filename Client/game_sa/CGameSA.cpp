@@ -147,6 +147,7 @@ CGameSA::CGameSA()
     m_pBuildingRemoval = new CBuildingRemovalSA();
 
     m_pRenderer = std::make_unique<CRendererSA>();
+    m_entityScanExtender = std::make_unique<CEntityScanExtenter>();
 
     // Normal weapon types (WEAPONSKILL_STD)
     for (int i = 0; i < NUM_WeaponInfosStdSkill; i++)
@@ -243,7 +244,6 @@ CGameSA::CGameSA()
     D3DResourceSystemSA::StaticSetHooks();
     CVehicleSA::StaticSetHooks();
     CCheckpointSA::StaticSetHooks();
-    CEntityScanExtenter::Initialize();
 }
 
 CGameSA::~CGameSA()
