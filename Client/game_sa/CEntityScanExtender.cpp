@@ -204,6 +204,12 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x564CB0 + 2, &m_halfSectorsY);
     MemPut(0x564CD1 + 2, &m_halfSectorsX);
     MemPut(0x564CF5 + 2, &m_halfSectorsY);
+
+    // CPhysical::CheckCollision
+    MemPut(0x54D9F1 + 2, &m_halfSectorsX);
+    MemPut(0x54DA12 + 2, &m_halfSectorsY);
+    MemPut(0x54DA31 + 2, &m_halfSectorsX);
+    MemPut(0x54DA50 + 2, &m_halfSectorsY);
 }
 
 void CEntityScanExtenter::PatchDynamic()
