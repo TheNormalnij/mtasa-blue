@@ -118,8 +118,8 @@ void CEntityScanExtenter::Resize(std::size_t sectorsX, std::size_t sectorsY)
     CURRENT_SECTORS_X = sectorsX;
     CURRENT_SECTORS_Y = sectorsY;
 
-    CURRENT_SECTORS_X_MINUS_ONE = CURRENT_SECTORS_X - 1;
-    CURRENT_SECTORS_Y_MINUS_ONE = CURRENT_SECTORS_Y - 1;
+    CURRENT_SECTORS_X_MINUS_ONE = sectorsX - 1;
+    CURRENT_SECTORS_Y_MINUS_ONE = sectorsY - 1;
 
     m_SectorsW = sectorsX * 50;
     m_SectorsH = sectorsY * 50;
@@ -213,7 +213,6 @@ void CEntityScanExtenter::PatchDynamic()
     MemPut(0x534826 + 4, m_woldRight - 1.f);
     MemPut(0x53483F + 4, m_woldTop);
     MemPut(0x534858 + 4, m_woldBottom - 1.f);
-    MemPut(0x5348DA + 3, CURRENT_SECTORS);
     MemPut(0x534A09 + 3, CURRENT_SECTORS);
     MemPut(0x534A98 + 3, reinterpret_cast<std::uint32_t>(CURRENT_SECTORS) + 4);
 
