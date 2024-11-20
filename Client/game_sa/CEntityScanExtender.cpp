@@ -210,6 +210,18 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x54DA12 + 2, &m_halfSectorsY);
     MemPut(0x54DA31 + 2, &m_halfSectorsX);
     MemPut(0x54DA50 + 2, &m_halfSectorsY);
+
+    // CRenderer::ScanWorld
+    MemPut(0x555462 + 2, &m_halfSectorsX);
+    MemPut(0x555481 + 2, &m_halfSectorsY);
+    MemPut(0x55549B + 2, &m_halfSectorsX);
+    MemPut(0x5554B5 + 2, &m_halfSectorsY);
+    MemPut(0x5554CF + 2, &m_halfSectorsX);
+    MemPut(0x5554E9 + 2, &m_halfSectorsY);
+    MemPut(0x555503 + 2, &m_halfSectorsX);
+    MemPut(0x55551D + 2, &m_halfSectorsY);
+    MemPut(0x555537 + 2, &m_halfSectorsX);
+    MemPut(0x555551 + 2, &m_halfSectorsY);
 }
 
 void CEntityScanExtenter::PatchDynamic()
