@@ -29,7 +29,7 @@ static CSector       (&DEFAULT_SECTORS)[120][120] = *(CSector(*)[120][120])0xB7D
 static CSector*      CURRENT_SECTORS = reinterpret_cast<CSector*>(DEFAULT_SECTORS);
 static auto*         SCAN_LIST = (tScanLists*)0xC8E0C8;
 
-static std::unique_ptr<CEntityScanExtenter> instance;
+static CEntityScanExtenter* instance;
 
 static std::uint32_t CURRENT_SECTORS_X = 120;
 static std::uint32_t CURRENT_SECTORS_Y = 120;
@@ -50,6 +50,7 @@ static std::int32_t clamp(std::int32_t v, std::int32_t min, std::int32_t max)
 CEntityScanExtenter::CEntityScanExtenter()
 {
     PatchOnce();
+    SetHooks();
     // Only for tests
     Resize(120, 120);
 }
@@ -212,6 +213,7 @@ void CEntityScanExtenter::PatchDynamic()
     MemPut(0x534826 + 4, m_woldRight - 1.f);
     MemPut(0x53483F + 4, m_woldTop);
     MemPut(0x534858 + 4, m_woldBottom - 1.f);
+    MemPut(0x5348DA + 3, CURRENT_SECTORS);
     MemPut(0x534A09 + 3, CURRENT_SECTORS);
     MemPut(0x534A98 + 3, reinterpret_cast<std::uint32_t>(CURRENT_SECTORS) + 4);
 
@@ -247,7 +249,7 @@ void CEntityScanExtenter::PatchDynamic()
     MemPut(0x41A861 + 3, CURRENT_SECTORS);
 
     // CWorld::ClearScanCodes
-    MemPut(0x563470 + 1, CURRENT_SECTORS);
+    MemPut(0x408258 + 1, CURRENT_SECTORS);
 
     // CWorld::RemoveStaticObjects
     MemPut(0x563844 + 1, CURRENT_SECTORS);
@@ -771,8 +773,8 @@ static std::uint32_t __cdecl GetArrayPositionResize(std::int32_t x, std::int32_t
 void __declspec(naked) HOOK_CEntity__Add1()
 {
     _asm {
-        push eax ; y
-        push ecx ; x
+        push edi ; y
+        push esi ; x
         call GetArrayPositionResize
         add  esp, 4*2
         JMP_ABSOLUTE_ASM(0x534A08)
@@ -792,18 +794,13 @@ void __declspec(naked) HOOK_CEntity__Add2()
     }
 }
 
-void CEntityScanExtenter::Initialize()
-{
-    instance = std::make_unique<CEntityScanExtenter>();
-    StaticSetHooks();
-}
-
 // CPhysical::ProcessShiftSectorList
 // CEntity__Remove
 // CPhysical::ProcessCollisionSectorList
 
-void CEntityScanExtenter::StaticSetHooks()
+void CEntityScanExtenter::SetHooks()
 {
+    instance = this;
     EZHookInstall(CEntity__Add1);
     EZHookInstall(CEntity__Add2);
     EZHookInstall(CRenderer__SetupScanLists);
