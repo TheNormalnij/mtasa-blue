@@ -257,6 +257,8 @@ void CEntityScanExtenter::PatchDynamic()
     // CWorld::ShutDown
     MemPut(0x563844 + 1, CURRENT_SECTORS);
 
+    // CPhysical::ProcessCollisionSectorList
+    MemPut(0x54BB23 + 3, CURRENT_SECTORS);
 }
 
 #define HOOKPOS_GetSector  0x407260
@@ -794,9 +796,36 @@ void __declspec(naked) HOOK_CEntity__Add2()
     }
 }
 
+#define HOOKPOS_CPhysical__ProcessCollisionSectorLists  0x54BAF6
+#define HOOKSIZE_CPhysical__ProcessCollisionSectorLists 0x5
+void __declspec(naked) HOOK_CPhysical__ProcessCollisionSectorLists()
+{
+    _asm {
+            mov eax, CURRENT_SECTORS_X_MINUS_ONE
+            cmp edi, eax
+            jl next
+            mov edi, eax
+        next:
+            mov eax, [esp+0x1F8]
+            xor ecx, ecx
+            cmp eax, ebx
+            setle cl
+            dec ecx
+            and ecx, eax
+            mov ebx, CURRENT_SECTORS_Y_MINUS_ONE
+            cmp ecx, ebx
+            jl calcTable
+            mov ecx, ebx
+        calcTable:
+            inc ebx
+            imul ecx, ebx
+            xor ebx, ebx
+            JMP_ABSOLUTE_ASM(0x54BB1E)
+    }
+}
+
 // CPhysical::ProcessShiftSectorList
 // CEntity__Remove
-// CPhysical::ProcessCollisionSectorList
 
 void CEntityScanExtenter::SetHooks()
 {
@@ -817,5 +846,6 @@ void CEntityScanExtenter::SetHooks()
     EZHookInstall(CTaskSimpleClimb__ScanToGrab);
     EZHookInstall(CWorld__FindObjectsOfTypeInRange);
     EZHookInstall(CCollision__CheckCameraCollisionBuildings);
+    EZHookInstall(CPhysical__ProcessCollisionSectorLists);
     EZHookInstall(GetSector);
 }
