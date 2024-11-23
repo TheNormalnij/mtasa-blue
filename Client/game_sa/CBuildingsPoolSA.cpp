@@ -53,6 +53,9 @@ CBuilding* CBuildingsPoolSA::AddBuilding(CClientBuilding* pClientBuilding, uint1
     if (!HasFreeBuildingSlot())
         return nullptr;
 
+    // Extend the game world if we need that
+    pGame->GetEntityScanExtender()->ResizeForPosition(*vPos);
+
     // Load building
     SFileObjectInstance instance;
     instance.modelID = modelId;

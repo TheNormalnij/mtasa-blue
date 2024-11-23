@@ -31,8 +31,12 @@ static auto*         SCAN_LIST = (tScanLists*)0xC8E0C8;
 
 static CEntityScanExtenter* instance;
 
-static std::uint32_t CURRENT_SECTORS_X = 120;
-static std::uint32_t CURRENT_SECTORS_Y = 120;
+constexpr std::int32_t DEFAULT_SECTORS_X = 120;
+constexpr std::int32_t DEFAULT_SECTORS_Y = 120;
+constexpr float        SECTOR_SIZE = 6000.0 / DEFAULT_SECTORS_X;
+
+static std::uint32_t CURRENT_SECTORS_X = DEFAULT_SECTORS_X;
+static std::uint32_t CURRENT_SECTORS_Y = DEFAULT_SECTORS_Y;
 static std::int32_t CURRENT_SECTORS_X_MINUS_ONE = 119;
 static std::int32_t CURRENT_SECTORS_Y_MINUS_ONE = 119;
 
@@ -49,10 +53,9 @@ static std::int32_t clamp(std::int32_t v, std::int32_t min, std::int32_t max)
 
 CEntityScanExtenter::CEntityScanExtenter()
 {
+    Reset();
     PatchOnce();
     SetHooks();
-    // Only for tests
-    Resize(120, 120);
 }
 
 bool CEntityScanExtenter::IsInWorldSector(std::int32_t x, std::int32_t y) const noexcept
@@ -60,9 +63,26 @@ bool CEntityScanExtenter::IsInWorldSector(std::int32_t x, std::int32_t y) const 
     return x >= 0 && x <= (std::int32_t)GetSectorsX() && y >= 0 && y <= (std::int32_t)GetSectorsY();
 }
 
+bool CEntityScanExtenter::IsInWorldPosition(const CVector& pos) const noexcept
+{
+    return pos.fX >= m_woldLeft && pos.fX <= m_woldRight && pos.fY >= m_woldBottom && pos.fY <= m_woldTop;
+}
+
 CSector* CEntityScanExtenter::GetSector(std::uint32_t x, std::uint32_t y) const noexcept
 {
     return &CURRENT_SECTORS[y * CURRENT_SECTORS_X + x];
+}
+
+void CEntityScanExtenter::ResizeForPosition(const CVector &pos)
+{
+    if (IsInWorldPosition(pos))
+        return;
+
+    float outsideCoorinate = std::max(std::abs(pos.fX), std::abs(pos.fY));
+    std::int32_t sectors = std::ceil(outsideCoorinate / SECTOR_SIZE) * 2;
+    sectors = RoundSectorForResize(sectors);
+
+    Resize(sectors, sectors);
 }
 
 std::uint32_t CEntityScanExtenter::GetSectorsX() const noexcept
@@ -75,24 +95,14 @@ std::uint32_t CEntityScanExtenter::GetSectorsY() const noexcept
     return CURRENT_SECTORS_Y;
 }
 
-CSector* CEntityScanExtenter::GetSectorResize(std::uint32_t x, std::uint32_t y)
-{
-    if (IsInWorldSector(x, y))
-        return GetSector(x, y);
-
-    // TODO
-    return GetSector(x, y);
-}
-
 std::uint32_t CEntityScanExtenter::GetSectorNumResize(std::int32_t x, std::int32_t y)
 {
-    x = clamp(x, 0, CURRENT_SECTORS_X);
-    y = clamp(y, 0, CURRENT_SECTORS_Y);
-
     if (IsInWorldSector(x, y))
         return GetSectorNum(x, y);
 
     // TODO
+    x = clamp(x, 0, CURRENT_SECTORS_X);
+    y = clamp(y, 0, CURRENT_SECTORS_Y);
     return GetSectorNum(x, y);
 }
 
@@ -103,26 +113,65 @@ std::uint32_t CEntityScanExtenter::GetSectorNum(std::uint32_t x, std::uint32_t y
 
 void CEntityScanExtenter::Resize(std::size_t sectorsX, std::size_t sectorsY)
 {
-    for (auto x = 0; x < CURRENT_SECTORS_X; x++)
+    auto newSectors = new CSector[sectorsY * sectorsX];
+
+    for (auto x = 0; x < CURRENT_SECTORS_X; x++) {
+        auto offsetX = (sectorsX - CURRENT_SECTORS_X) / 2;
         for (auto y = 0; y < CURRENT_SECTORS_Y; y++)
         {
+            auto offsetY = (sectorsY - CURRENT_SECTORS_Y) / 2;
             CURRENT_SECTORS->m_buildings.RemoveAllItems();
             CURRENT_SECTORS->m_dummies.RemoveAllItems();
+
+            newSectors[sectorsY * (offsetY + y) + (offsetX + x)].Swap(CURRENT_SECTORS[CURRENT_SECTORS_Y * y + x]);
         }
+    }
 
     if (CURRENT_SECTORS != reinterpret_cast<CSector*>(DEFAULT_SECTORS))
         delete[] CURRENT_SECTORS;
 
-    CURRENT_SECTORS = new CSector[sectorsY * sectorsX];
+    CURRENT_SECTORS = newSectors;
 
+    CalculateWorldValiables(sectorsX, sectorsY);
+    PatchDynamic();
+}
+
+void CEntityScanExtenter::Reset()
+{
+    if (CURRENT_SECTORS != reinterpret_cast<CSector*>(DEFAULT_SECTORS))
+    {
+        for (auto x = 0; x < DEFAULT_SECTORS_X; x++)
+        {
+            auto offsetX = (CURRENT_SECTORS_X - DEFAULT_SECTORS_X) / 2;
+            for (auto y = 0; y < DEFAULT_SECTORS_Y; y++)
+            {
+                auto offsetY = (CURRENT_SECTORS_Y - DEFAULT_SECTORS_Y) / 2;
+                CURRENT_SECTORS->m_buildings.RemoveAllItems();
+                CURRENT_SECTORS->m_dummies.RemoveAllItems();
+
+                DEFAULT_SECTORS[y][x].Swap(CURRENT_SECTORS[CURRENT_SECTORS_Y * (offsetY + y) + (offsetX + x)]);
+            }
+        }
+
+        delete[] CURRENT_SECTORS;
+
+        CURRENT_SECTORS = reinterpret_cast<CSector*>(DEFAULT_SECTORS);
+    }
+
+    CalculateWorldValiables(DEFAULT_SECTORS_X, DEFAULT_SECTORS_Y);
+    PatchDynamic();
+}
+
+void CEntityScanExtenter::CalculateWorldValiables(std::size_t sectorsX, std::size_t sectorsY)
+{
     CURRENT_SECTORS_X = sectorsX;
     CURRENT_SECTORS_Y = sectorsY;
 
     CURRENT_SECTORS_X_MINUS_ONE = sectorsX - 1;
     CURRENT_SECTORS_Y_MINUS_ONE = sectorsY - 1;
 
-    m_SectorsW = sectorsX * 50;
-    m_SectorsH = sectorsY * 50;
+    m_SectorsW = sectorsX * SECTOR_SIZE;
+    m_SectorsH = sectorsY * SECTOR_SIZE;
 
     m_halfSectorsX = sectorsX / 2.0f;
     m_halfSectorsY = sectorsY / 2.0f;
@@ -131,8 +180,6 @@ void CEntityScanExtenter::Resize(std::size_t sectorsX, std::size_t sectorsY)
     m_woldRight = m_SectorsW / 2.0f;
     m_woldTop = -(m_SectorsH / 2.0f);
     m_woldBottom = m_SectorsH / 2.0f;
-
-    PatchDynamic();
 }
 
 std::int32_t CEntityScanExtenter::GetSectorX(float x) const noexcept
@@ -145,6 +192,14 @@ std::int32_t CEntityScanExtenter::GetSectorY(float y) const noexcept
 {
     y = y / static_cast<float>(m_SectorsH / CURRENT_SECTORS_Y) + static_cast<float>(CURRENT_SECTORS_Y / 2);
     return std::floor(y);
+}
+
+std::int32_t CEntityScanExtenter::RoundSectorForResize(std::int32_t sector) const noexcept
+{
+    // REPEAT_SECTORS should overlap CURRENT_SECTORS in the same positions.
+    // So we can add 16 sectors left and right to save the orinal overlapping
+    constexpr auto minimalAdding = MAX_REPEAT_SECTORS_X * 2; 
+    return DEFAULT_SECTORS_X + std::ceil((float)(sector - DEFAULT_SECTORS_X) / (float)minimalAdding) * minimalAdding;
 }
 
 void CEntityScanExtenter::PatchOnce()
@@ -469,7 +524,6 @@ static void HOOK_CStreaming__DeleteRwObjectsAfterDeath(const CVector2D& point)
     }
 }
 
-
 // Untested need a way to trigger this function
 #define HOOKPOS_CStreaming__DeleteRwObjectsBehindCamera  0x40D7C0
 #define HOOKSIZE_CStreaming__DeleteRwObjectsBehindCamera 0x5
@@ -782,9 +836,9 @@ void __declspec(naked) HOOK_CCollision__CheckCameraCollisionBuildings()
     }
 }
 
-static std::uint32_t __cdecl GetArrayPositionResize(std::int32_t x, std::int32_t y)
+static std::uint32_t __cdecl GetArrayPosition(std::int32_t x, std::int32_t y)
 {
-    return instance->GetSectorNumResize(x, y);
+    return instance->GetSectorNum(x, y);
 }
 
 #define HOOKPOS_CEntity__Add1  0x5349DB
@@ -794,7 +848,7 @@ void __declspec(naked) HOOK_CEntity__Add1()
     _asm {
         push edi ; y
         push esi ; x
-        call GetArrayPositionResize
+        call GetArrayPosition
         add  esp, 4*2
         JMP_ABSOLUTE_ASM(0x534A08)
     }
@@ -805,9 +859,9 @@ void __declspec(naked) HOOK_CEntity__Add1()
 void __declspec(naked) HOOK_CEntity__Add2()
 {
     _asm {
-        push eax
-        push ecx
-        call GetArrayPositionResize
+        push edi
+        push esi
+        call GetArrayPosition
         add  esp, 4*2
         JMP_ABSOLUTE_ASM(0x534A98)
     }
