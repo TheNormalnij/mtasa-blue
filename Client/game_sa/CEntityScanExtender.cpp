@@ -69,7 +69,7 @@ bool CEntityScanExtenter::IsInWorldSector(std::int32_t x, std::int32_t y) const 
 
 bool CEntityScanExtenter::IsInWorldPosition(const CVector& pos) const noexcept
 {
-    return pos.fX >= m_woldLeft && pos.fX <= m_woldRight && pos.fY >= m_woldBottom && pos.fY <= m_woldTop;
+    return pos.fX >= m_woldLeft && pos.fX <= m_woldRight && pos.fY >= m_woldTop && pos.fY <= m_woldBottom;
 }
 
 CSector* CEntityScanExtenter::GetSector(std::uint32_t x, std::uint32_t y) const noexcept
