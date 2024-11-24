@@ -275,6 +275,13 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x55551D + 2, &m_halfSectorsY);
     MemPut(0x555537 + 2, &m_halfSectorsX);
     MemPut(0x555551 + 2, &m_halfSectorsY);
+
+    // CPlantMgr::_ColEntityCache_Update
+    MemPut(0x5DC5F7 + 2, &m_halfSectorsX);
+    MemPut(0x5DC64D + 2, &m_halfSectorsY);
+    MemPut(0x5DC695 + 2, &m_halfSectorsX);
+    MemPut(0x5DC6E6 + 2, &m_halfSectorsY);
+
 }
 
 void CEntityScanExtenter::PatchDynamic()
@@ -329,6 +336,13 @@ void CEntityScanExtenter::PatchDynamic()
 
     // CPhysical::ProcessCollisionSectorList
     MemPut(0x54BB23 + 3, CURRENT_SECTORS);
+
+    // CPlantMgr::_ColEntityCache_Update
+    // It uses the same value for x and y
+    MemPut(0x5DC6AF + 1, CURRENT_SECTORS_X_MINUS_ONE);
+
+    MemPut(0x5DC7A7 + 3, CURRENT_SECTORS);
+
 }
 
 #define HOOKPOS_GetSector  0x407260
@@ -893,6 +907,28 @@ void __declspec(naked) HOOK_CPhysical__ProcessCollisionSectorLists()
     }
 }
 
+#define HOOKPOS_CPlantMgr__ColEntityCache_Update 0x5DC78A
+#define HOOKSIZE_CPlantMgr__ColEntityCache_Update 0x5
+void __declspec(naked) HOOK_CPlantMgr__ColEntityCache_Update()
+{
+    _asm {
+            mov eax, CURRENT_SECTORS_X_MINUS_ONE
+            cmp ecx, eax
+            jl next
+            mov ecx, eax
+        next:
+            mov eax, [esp+0x20]
+            mov ebx, CURRENT_SECTORS_Y_MINUS_ONE
+            cmp eax, ebx
+            jl calcTable
+            mov eax, ebx
+        calcTable:
+            inc ebx
+            imul eax, ebx
+            JMP_ABSOLUTE_ASM(0x5DC7A5)
+    }
+}
+
 // CPhysical::ProcessShiftSectorList
 // CEntity__Remove
 
@@ -916,5 +952,6 @@ void CEntityScanExtenter::SetHooks()
     EZHookInstall(CWorld__FindObjectsOfTypeInRange);
     EZHookInstall(CCollision__CheckCameraCollisionBuildings);
     EZHookInstall(CPhysical__ProcessCollisionSectorLists);
+    EZHookInstall(CPlantMgr__ColEntityCache_Update);
     EZHookInstall(GetSector);
 }
