@@ -11,6 +11,10 @@
 #include "CEntityScanExtender.h"
 #include "CRepeatSectorSAInterface.h"
 #include "CCameraSA.h"
+#include "CGameSA.h"
+#include "CIplStoreSA.h"
+
+extern CGameSA* pGame;
 
 struct tScanLists
 {
@@ -21,8 +25,12 @@ struct tScanLists
     CPtrNodeDoubleListSAInterface<CEntitySAInterface>* dummiesList;
 };
 
-const auto MAX_REPEAT_SECTORS_X = 16;
-const auto MAX_REPEAT_SECTORS_Y = 16;
+constexpr auto MAX_REPEAT_SECTORS_X = 16;
+constexpr auto MAX_REPEAT_SECTORS_Y = 16;
+
+constexpr std::int32_t DEFAULT_SECTORS_X = 120;
+constexpr std::int32_t DEFAULT_SECTORS_Y = 120;
+constexpr float        SECTOR_SIZE = 6000.0 / DEFAULT_SECTORS_X;
 
 static CRepeatSector (&DEFAULT_REPEAT_SECTORS)[MAX_REPEAT_SECTORS_Y][MAX_REPEAT_SECTORS_X] = *(CRepeatSector(*)[16][16])0xB992B8;
 static CSector       (&DEFAULT_SECTORS)[120][120] = *(CSector(*)[120][120])0xB7D0B8;
@@ -30,10 +38,6 @@ static CSector*      CURRENT_SECTORS = reinterpret_cast<CSector*>(DEFAULT_SECTOR
 static auto*         SCAN_LIST = (tScanLists*)0xC8E0C8;
 
 static CEntityScanExtenter* instance;
-
-constexpr std::int32_t DEFAULT_SECTORS_X = 120;
-constexpr std::int32_t DEFAULT_SECTORS_Y = 120;
-constexpr float        SECTOR_SIZE = 6000.0 / DEFAULT_SECTORS_X;
 
 static std::uint32_t CURRENT_SECTORS_X = DEFAULT_SECTORS_X;
 static std::uint32_t CURRENT_SECTORS_Y = DEFAULT_SECTORS_Y;
@@ -95,24 +99,16 @@ std::uint32_t CEntityScanExtenter::GetSectorsY() const noexcept
     return CURRENT_SECTORS_Y;
 }
 
-std::uint32_t CEntityScanExtenter::GetSectorNumResize(std::int32_t x, std::int32_t y)
-{
-    if (IsInWorldSector(x, y))
-        return GetSectorNum(x, y);
-
-    // TODO
-    x = clamp(x, 0, CURRENT_SECTORS_X);
-    y = clamp(y, 0, CURRENT_SECTORS_Y);
-    return GetSectorNum(x, y);
-}
-
-std::uint32_t CEntityScanExtenter::GetSectorNum(std::uint32_t x, std::uint32_t y)
+std::uint32_t CEntityScanExtenter::GetSectorNum(std::uint32_t x, std::uint32_t y) const noexcept
 {
     return y * CURRENT_SECTORS_X + x;
 }
 
 void CEntityScanExtenter::Resize(std::size_t sectorsX, std::size_t sectorsY)
 {
+    // Need rebuild gIplQuadTree in IPL store
+    pGame->GetIplStore()->SetDynamicIplStreamingEnabled(false);
+
     auto newSectors = new CSector[sectorsY * sectorsX];
 
     for (auto x = 0; x < CURRENT_SECTORS_X; x++) {
@@ -134,6 +130,8 @@ void CEntityScanExtenter::Resize(std::size_t sectorsX, std::size_t sectorsY)
 
     CalculateWorldValiables(sectorsX, sectorsY);
     PatchDynamic();
+
+    pGame->GetIplStore()->SetDynamicIplStreamingEnabled(true);
 }
 
 void CEntityScanExtenter::Reset()

@@ -40,10 +40,9 @@ public:
     bool     IsInWorldPosition(const CVector& pos) const noexcept;
     CSector* GetSector(std::uint32_t x, std::uint32_t y) const noexcept;
 
-    void ResizeForPosition(const CVector &pos);
+    void ResizeForPosition(const CVector& pos);
 
-    std::uint32_t GetSectorNumResize(std::int32_t x, std::int32_t y);
-    std::uint32_t GetSectorNum(std::uint32_t x, std::uint32_t y);
+    std::uint32_t GetSectorNum(std::uint32_t x, std::uint32_t y) const noexcept;
 
 
     std::int32_t GetSectorX(float x) const noexcept;
@@ -63,14 +62,14 @@ private:
     void CalculateWorldValiables(std::size_t sectorsX, std::size_t sectorsY);
 
 private:
-    std::size_t m_SectorsW{6000};
-    std::size_t m_SectorsH{6000};
+    std::size_t m_SectorsW;
+    std::size_t m_SectorsH;
 
-    float m_halfSectorsX{60.f};
-    float m_halfSectorsY{60.f};
+    float m_halfSectorsX;
+    float m_halfSectorsY;
 
-    float m_woldLeft{-3000.f};
-    float m_woldRight{3000.f};
-    float m_woldTop{-3000.f};
-    float m_woldBottom{3000.f};
+    float m_woldLeft;
+    float m_woldRight;
+    float m_woldTop;
+    float m_woldBottom;
 };
