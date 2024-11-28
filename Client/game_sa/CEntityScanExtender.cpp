@@ -222,6 +222,13 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x534B53 + 2, &m_woldTop);
     MemPut(0x534B6C + 2, &m_woldBottom);
 
+    // CPhysical::Add
+
+    MemPut(0x544A83 + 2, &m_halfSectorsX);
+    MemPut(0x544AA6 + 2, &m_halfSectorsY);
+    MemPut(0x544AC5 + 2, &m_halfSectorsX);
+    MemPut(0x544AE6 + 2, &m_halfSectorsY);
+
     // 0x71CB70 CGlass::HasGlassBeenShatteredAtCoors ???
 
 	// CStreaming::AddModelsToRequestList
@@ -282,6 +289,11 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x5DC695 + 2, &m_halfSectorsX);
     MemPut(0x5DC6E6 + 2, &m_halfSectorsY);
 
+    // CWorld::FindObjectsInRange
+    MemPut(0x564A3A + 2, &m_halfSectorsX);
+    MemPut(0x564A60 + 2, &m_halfSectorsY);
+    MemPut(0x564A81 + 2, &m_halfSectorsX);
+    MemPut(0x564AA5 + 2, &m_halfSectorsY);
 }
 
 void CEntityScanExtenter::PatchDynamic()
@@ -343,6 +355,8 @@ void CEntityScanExtenter::PatchDynamic()
 
     MemPut(0x5DC7A7 + 3, CURRENT_SECTORS);
 
+    // CWorld::FindObjectsInRange
+    MemPut(0x564B59 + 3, CURRENT_SECTORS);
 }
 
 #define HOOKPOS_GetSector  0x407260
@@ -929,6 +943,26 @@ void __declspec(naked) HOOK_CPlantMgr__ColEntityCache_Update()
     }
 }
 
+#define HOOKPOS_CWorld__FindObjectsInRange  0x564B3C
+#define HOOKSIZE_CWorld__FindObjectsInRange 0x5
+void __declspec(naked) HOOK_CWorld__FindObjectsInRange()
+{
+    _asm {
+            mov eax, CURRENT_SECTORS_X_MINUS_ONE
+            cmp ecx, eax
+            jl next
+            mov ecx, eax
+        next:
+            mov eax, [esp+0x18]
+            cmp eax, CURRENT_SECTORS_Y_MINUS_ONE
+            jl calcTable
+            mov eax, CURRENT_SECTORS_Y_MINUS_ONE
+        calcTable:
+            imul eax, CURRENT_SECTORS_Y
+            JMP_ABSOLUTE_ASM(0x564B57)
+    }
+}
+
 // CPhysical::ProcessShiftSectorList
 // CEntity__Remove
 
@@ -953,5 +987,6 @@ void CEntityScanExtenter::SetHooks()
     EZHookInstall(CCollision__CheckCameraCollisionBuildings);
     EZHookInstall(CPhysical__ProcessCollisionSectorLists);
     EZHookInstall(CPlantMgr__ColEntityCache_Update);
+    EZHookInstall(CWorld__FindObjectsInRange);
     EZHookInstall(GetSector);
 }
