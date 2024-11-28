@@ -222,6 +222,11 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x534B53 + 2, &m_woldTop);
     MemPut(0x534B6C + 2, &m_woldBottom);
 
+    MemPut(0x534C82 + 2, &m_halfSectorsX);
+    MemPut(0x534CA5 + 2, &m_halfSectorsY);
+    MemPut(0x534CC4 + 2, &m_halfSectorsX);
+    MemPut(0x534CE5 + 2, &m_halfSectorsY);
+
     // CPhysical::Add
 
     MemPut(0x544A83 + 2, &m_halfSectorsX);
@@ -318,6 +323,9 @@ void CEntityScanExtenter::PatchDynamic()
     MemPut(0x534A98 + 3, reinterpret_cast<std::uint32_t>(CURRENT_SECTORS) + 4);
 
     // CEntity::Remove
+    MemPut(0x534D6B + 3, CURRENT_SECTORS);
+    MemPut(0x534DFA + 3, reinterpret_cast<std::uint32_t>(CURRENT_SECTORS) + 4);
+    
     MemPut(0x534B47 + 4, m_woldRight - 1.f);
     MemPut(0x534B60 + 4, m_woldTop);
     MemPut(0x534B79 + 4, m_woldBottom - 1.f);
@@ -907,6 +915,32 @@ void __declspec(naked) HOOK_CEntity__Add2()
     }
 }
 
+#define HOOKPOS_CEntity__Remove1  0x534D3D
+#define HOOKSIZE_CEntity__Remove1 0x7
+void __declspec(naked) HOOK_CEntity__Remove1()
+{
+    _asm {
+        push edi ; y
+        push esi ; x
+        call GetArrayPosition
+        add  esp, 4*2
+        JMP_ABSOLUTE_ASM(0x534D6A)
+    }
+}
+
+#define HOOKPOS_CEntity__Remove2  0x534DCD
+#define HOOKSIZE_CEntity__Remove2 0x7
+void __declspec(naked) HOOK_CEntity__Remove2()
+{
+    _asm {
+        push edi
+        push esi
+        call GetArrayPosition
+        add  esp, 4*2
+        JMP_ABSOLUTE_ASM(0x534DFA)
+    }
+}
+
 #define HOOKPOS_CPhysical__ProcessCollisionSectorLists  0x54BAF6
 #define HOOKSIZE_CPhysical__ProcessCollisionSectorLists 0x5
 void __declspec(naked) HOOK_CPhysical__ProcessCollisionSectorLists()
@@ -1007,7 +1041,6 @@ void __declspec(naked) HOOK_CPhysical__ProcessShiftSectorList()
 }
 
 // 
-// CEntity__Remove
 // CVehicle::DoBladeCollision
 
 void CEntityScanExtenter::SetHooks()
@@ -1033,5 +1066,7 @@ void CEntityScanExtenter::SetHooks()
     EZHookInstall(CPlantMgr__ColEntityCache_Update);
     EZHookInstall(CWorld__FindObjectsInRange);
     EZHookInstall(CPhysical__ProcessShiftSectorList);
+    EZHookInstall(CEntity__Remove1);
+    EZHookInstall(CEntity__Remove2);
     EZHookInstall(GetSector);
 }
