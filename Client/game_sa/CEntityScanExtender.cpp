@@ -294,6 +294,17 @@ void CEntityScanExtenter::PatchOnce()
     MemPut(0x564A60 + 2, &m_halfSectorsY);
     MemPut(0x564A81 + 2, &m_halfSectorsX);
     MemPut(0x564AA5 + 2, &m_halfSectorsY);
+
+    // CPhysical::ProcessShift
+    MemPut(0x54DC18 + 2, &m_halfSectorsX);
+    MemPut(0x54DC39 + 2, &m_halfSectorsY);
+    MemPut(0x54DC58 + 2, &m_halfSectorsX);
+    MemPut(0x54DC77 + 2, &m_halfSectorsY);
+
+    MemPut(0x54DD15 + 2, &m_halfSectorsX);
+    MemPut(0x54DD36 + 2, &m_halfSectorsY);
+    MemPut(0x54DD55 + 2, &m_halfSectorsX);
+    MemPut(0x54DD74 + 2, &m_halfSectorsY);
 }
 
 void CEntityScanExtenter::PatchDynamic()
@@ -357,6 +368,9 @@ void CEntityScanExtenter::PatchDynamic()
 
     // CWorld::FindObjectsInRange
     MemPut(0x564B59 + 3, CURRENT_SECTORS);
+
+    // CPhysical::ProcessShiftSectorList
+    MemPut(0x546738 + 3, CURRENT_SECTORS);
 }
 
 #define HOOKPOS_GetSector  0x407260
@@ -963,8 +977,38 @@ void __declspec(naked) HOOK_CWorld__FindObjectsInRange()
     }
 }
 
-// CPhysical::ProcessShiftSectorList
+#define HOOKPOS_CPhysical__ProcessShiftSectorList  0x5466F4
+#define HOOKSIZE_CPhysical__ProcessShiftSectorList 0x5
+void __declspec(naked) HOOK_CPhysical__ProcessShiftSectorList()
+{
+    _asm {
+            mov eax, CURRENT_SECTORS_X_MINUS_ONE
+            cmp esi, eax
+            jl next
+            mov esi, eax
+        next:
+            mov eax, [esp+0x5EC] ; original code
+            xor ecx, ecx
+            test eax, eax
+            setle cl
+            dec ecx
+            and ecx, eax ; end original code
+
+            mov ebp, CURRENT_SECTORS_Y_MINUS_ONE
+            cmp ecx, ebp
+            jl calcTable
+            mov ecx, ebp
+        calcTable:
+            inc ebp
+            imul eax, ebp
+            fld [esp+0x38]
+            JMP_ABSOLUTE_ASM(0x546720)
+    }
+}
+
+// 
 // CEntity__Remove
+// CVehicle::DoBladeCollision
 
 void CEntityScanExtenter::SetHooks()
 {
@@ -988,5 +1032,6 @@ void CEntityScanExtenter::SetHooks()
     EZHookInstall(CPhysical__ProcessCollisionSectorLists);
     EZHookInstall(CPlantMgr__ColEntityCache_Update);
     EZHookInstall(CWorld__FindObjectsInRange);
+    EZHookInstall(CPhysical__ProcessShiftSectorList);
     EZHookInstall(GetSector);
 }
