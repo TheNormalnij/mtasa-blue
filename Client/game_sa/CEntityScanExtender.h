@@ -38,7 +38,7 @@ public:
 
     bool     IsInWorldSector(std::int32_t x, std::int32_t y) const noexcept;
     bool     IsInWorldPosition(const CVector& pos) const noexcept;
-    CSector* GetSector(std::uint32_t x, std::uint32_t y) const noexcept;
+    CSector* GetSector(std::int32_t x, std::int32_t y) const noexcept;
 
     void ResizeForPosition(const CVector& pos);
 
@@ -47,6 +47,8 @@ public:
 
     std::int32_t GetSectorX(float x) const noexcept;
     std::int32_t GetSectorY(float x) const noexcept;
+
+    float GetSectorPosX(std::int32_t) const noexcept;
 
     std::uint32_t GetSectorsX() const noexcept;
     std::uint32_t GetSectorsY() const noexcept;

@@ -71,6 +71,8 @@ public:
     void          ResetAllSurfaceInfo() override;
     bool          ResetSurfaceInfo(short sSurfaceID) override;
 
+    void ClearScanCodes() { ((void(__cdecl*)())0x563470)(); };
+
 private:
     float                                                     m_fAircraftMaxHeight;
     CSurfaceType*                                             m_pSurfaceInfo;

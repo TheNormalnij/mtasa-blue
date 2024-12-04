@@ -13,6 +13,8 @@
 #include "CCameraSA.h"
 #include "CGameSA.h"
 #include "CIplStoreSA.h"
+#include "CWorldSA.h"
+#include "CColModelSA.h"
 
 extern CGameSA* pGame;
 
@@ -32,8 +34,9 @@ constexpr std::int32_t DEFAULT_SECTORS_X = 120;
 constexpr std::int32_t DEFAULT_SECTORS_Y = 120;
 constexpr float        SECTOR_SIZE = 6000.0 / DEFAULT_SECTORS_X;
 
-static CRepeatSector (&DEFAULT_REPEAT_SECTORS)[MAX_REPEAT_SECTORS_Y][MAX_REPEAT_SECTORS_X] = *(CRepeatSector(*)[16][16])0xB992B8;
-static CSector       (&DEFAULT_SECTORS)[120][120] = *(CSector(*)[120][120])0xB7D0B8;
+static CRepeatSector (&DEFAULT_REPEAT_SECTORS)[MAX_REPEAT_SECTORS_Y][MAX_REPEAT_SECTORS_X] =
+    *(CRepeatSector(*)[MAX_REPEAT_SECTORS_X][MAX_REPEAT_SECTORS_X])0xB992B8;
+static CSector (&DEFAULT_SECTORS)[DEFAULT_SECTORS_Y][DEFAULT_SECTORS_X] = *(CSector(*)[DEFAULT_SECTORS_Y][DEFAULT_SECTORS_X])0xB7D0B8;
 static CSector*      CURRENT_SECTORS = reinterpret_cast<CSector*>(DEFAULT_SECTORS);
 static auto*         SCAN_LIST = (tScanLists*)0xC8E0C8;
 
@@ -45,7 +48,8 @@ static std::int32_t CURRENT_SECTORS_X_MINUS_ONE = 119;
 static std::int32_t CURRENT_SECTORS_Y_MINUS_ONE = 119;
 
 // Missing in C++14
-static std::int32_t clamp(std::int32_t v, std::int32_t min, std::int32_t max)
+template<typename T>
+static T clamp(T v, T min, T max)
 {
     if (v < min)
         return min;
@@ -72,8 +76,10 @@ bool CEntityScanExtenter::IsInWorldPosition(const CVector& pos) const noexcept
     return pos.fX >= m_woldLeft && pos.fX <= m_woldRight && pos.fY >= m_woldTop && pos.fY <= m_woldBottom;
 }
 
-CSector* CEntityScanExtenter::GetSector(std::uint32_t x, std::uint32_t y) const noexcept
+CSector* CEntityScanExtenter::GetSector(std::int32_t x, std::int32_t y) const noexcept
 {
+    x = clamp<std::int32_t>(x, 0, GetSectorsX() - 1);
+    y = clamp<std::int32_t>(y, 0, GetSectorsY() - 1);
     return &CURRENT_SECTORS[y * CURRENT_SECTORS_X + x];
 }
 
@@ -190,6 +196,13 @@ std::int32_t CEntityScanExtenter::GetSectorY(float y) const noexcept
 {
     y = y / static_cast<float>(m_SectorsH / CURRENT_SECTORS_Y) + static_cast<float>(CURRENT_SECTORS_Y / 2);
     return std::floor(y);
+}
+
+float CEntityScanExtenter::GetSectorPosX(std::int32_t sector) const noexcept
+{
+    const int HalfOfTotalSectorsX = CURRENT_SECTORS_X / 2;
+    const float fTotalMapUnitsX = m_SectorsW / CURRENT_SECTORS_X;
+    return (sector - HalfOfTotalSectorsX) * fTotalMapUnitsX + (fTotalMapUnitsX / 2);
 }
 
 std::int32_t CEntityScanExtenter::RoundSectorForResize(std::int32_t sector) const noexcept
@@ -385,8 +398,6 @@ void CEntityScanExtenter::PatchDynamic()
 #define HOOKSIZE_GetSector 0x5
 CSector* __cdecl HOOK_GetSector(std::int32_t x, std::int32_t y)
 {
-    x = clamp(x, 0, instance->GetSectorsX() - 1);
-    y = clamp(y, 0, instance->GetSectorsY() - 1);
     return instance->GetSector(x, y);
 }
 
@@ -1040,6 +1051,176 @@ void __declspec(naked) HOOK_CPhysical__ProcessShiftSectorList()
     }
 }
 
+const static auto IncrementCurrentScanCode = (void (*)())0x4072E0;
+const static auto ProcessLineOfSightSector =
+    (bool (*__cdecl)(CSector* sector, CRepeatSector* repeatSector, const CColLineSA& colLine, CColPointSAInterface& outColPoint, float& maxTouchDistance,
+                     CEntitySAInterface*& outEntity, bool buildings, bool vehicles, bool peds, bool objects, bool dummies, bool doSeeThroughCheck,
+                    bool doCameraIgnoreCheck, bool doShootThroughCheck))0x56B5E0;
+
+#define HOOKPOS_CWorld_ProcessLineOfSight  0x56BA00
+#define HOOKSIZE_CWorld_ProcessLineOfSight 0x11
+bool __cdecl HOOK_CWorld_ProcessLineOfSight(const CVector& origin, const CVector& target, CColPointSAInterface& outColPoint, CEntitySAInterface*& outEntity,
+                                            bool buildings, bool vehicles, bool peds, bool objects, bool dummies, bool doSeeThroughCheck,
+                                            bool doCameraIgnoreCheck, bool doShootThroughCheck)
+{
+    outEntity = nullptr;
+
+    IncrementCurrentScanCode();
+
+    const int32 originSectorX = instance->GetSectorX(origin.fX);
+    const int32 originSectorY = instance->GetSectorY(origin.fY);
+    const int32 targetSectorX = instance->GetSectorX(target.fX);
+    const int32 targetSectorY = instance->GetSectorY(target.fY);
+
+
+    int* someShit = (int*)0xB7CD60;
+    *someShit = 0;
+
+    float      touchDist{1.f};
+    const auto ProcessSector = [&, line = CColLineSA{origin, target}](int32 x, int32 y)
+    {
+        return ProcessLineOfSightSector(instance->GetSector(x, y), GetRepeatSector(x, y), line, outColPoint, touchDist, outEntity, buildings, vehicles, peds,
+                                        objects, dummies, doSeeThroughCheck, doCameraIgnoreCheck, doShootThroughCheck);
+    };
+
+    if (originSectorX == targetSectorX && originSectorY == targetSectorY)
+    {            // Both in the same sector
+        ProcessSector(originSectorX, originSectorY);
+    }
+    else if (originSectorX == targetSectorX)
+    {            // Same X for both, iterate on Y
+        if (originSectorY >= targetSectorY)
+        {            // origin => target on Y axis
+            for (auto y = originSectorY; y >= targetSectorY; y--)
+                ProcessSector(originSectorX, y);
+        }
+        else
+        {            // target => origin on Y axis
+            for (auto y = targetSectorY; y >= originSectorY; y--)
+                ProcessSector(originSectorX, y);
+        }
+    }
+    else if (originSectorY == targetSectorY)
+    {            // Same Y for both, iterate on X
+        if (originSectorX >= targetSectorX)
+        {            // origin => target on X axis
+            for (auto x = originSectorX; x >= targetSectorX; x--)
+                ProcessSector(x, originSectorY);
+        }
+        else
+        {            // target => origin on X axis
+            for (auto x = targetSectorX; x >= originSectorX; x--)
+                ProcessSector(x, originSectorY);
+        }
+    }
+    else
+    {            // Different x and y sectors
+        float displacement = (target.fY - origin.fY) / (target.fX - origin.fX);
+
+        // TODO: Make this more readable
+        //       Maybe adding some debug module for this might be useful?
+        //       To like draw the sectors iterated or something (Would give us a better understanding of how it works)
+
+        int32 startY, endY, x, y;
+        if (origin.fX < target.fX)
+        {            // Step from left to right
+            startY = originSectorY;
+            endY = instance->GetSectorY((instance->GetSectorPosX(originSectorX + 1) - origin.fX) * displacement + origin.fY);
+
+            if (originSectorY < endY)
+            {
+                for (y = originSectorY; y <= endY; y++)
+                    ProcessSector(originSectorX, y);
+            }
+            else
+            {
+                for (y = originSectorY; y >= endY; y--)
+                    ProcessSector(originSectorX, y);
+            }
+
+            for (x = originSectorX + 1; x < targetSectorX; x++)
+            {
+                startY = endY;
+                endY = instance->GetSectorY((instance->GetSectorPosX(x + 1) - origin.fX) * displacement + origin.fY);
+                if (startY < endY)
+                {
+                    for (y = startY; y <= endY; y++)
+                        ProcessSector(x, y);
+                }
+                else
+                {
+                    for (y = startY; y >= endY; y--)
+                        ProcessSector(x, y);
+                }
+            }
+
+            startY = endY;
+            endY = targetSectorY;
+
+            if (startY < endY)
+            {
+                for (y = startY; y <= endY; y++)
+                    ProcessSector(targetSectorX, y);
+            }
+            else
+            {
+                for (y = startY; y >= endY; y--)
+                    ProcessSector(targetSectorX, y);
+            }
+        }
+        else
+        {            // Step from right to left
+            startY = originSectorY;
+            endY = instance->GetSectorY((instance->GetSectorPosX(originSectorX) - origin.fX) * displacement + origin.fY);
+            if (startY < endY)
+            {
+                for (y = startY; y <= endY; y++)
+                    ProcessSector(originSectorX, y);
+            }
+            else
+            {
+                for (y = startY; y >= endY; y--)
+                    ProcessSector(originSectorX, y);
+            }
+
+            for (x = originSectorX - 1; x > targetSectorX; x--)
+            {
+                startY = endY;
+                endY = instance->GetSectorY((instance->GetSectorPosX(x) - origin.fX) * displacement + origin.fY);
+                if (startY < endY)
+                {
+                    for (y = startY; y <= endY; y++)
+                        ProcessSector(x, y);
+                }
+                else
+                {
+                    for (y = startY; y >= endY; y--)
+                        ProcessSector(x, y);
+                }
+            }
+
+            startY = endY;
+            endY = targetSectorY;
+            if (startY < endY)
+            {
+                for (y = startY; y <= endY; y++)
+                    ProcessSector(targetSectorX, y);
+            }
+            else
+            {
+                for (y = startY; y >= endY; y--)
+                    ProcessSector(targetSectorX, y);
+            }
+        }
+    }
+    if (touchDist < 1.f)
+    {
+        assert(outEntity);            // If there was a collision there must be an entity as well!
+        return true;
+    }
+    return false;
+}
+
 // 
 // CVehicle::DoBladeCollision
 
@@ -1069,4 +1250,5 @@ void CEntityScanExtenter::SetHooks()
     EZHookInstall(CEntity__Remove1);
     EZHookInstall(CEntity__Remove2);
     EZHookInstall(GetSector);
+    EZHookInstall(CWorld_ProcessLineOfSight);
 }

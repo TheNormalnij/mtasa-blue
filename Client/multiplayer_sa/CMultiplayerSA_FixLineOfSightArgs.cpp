@@ -37,39 +37,6 @@ namespace
 
 ////////////////////////////////////////////////////////////////
 //
-// OnCWorld_ProcessLineOfSight
-//
-// Ensure position args in range
-//
-////////////////////////////////////////////////////////////////
-void _cdecl OnCWorld_ProcessLineOfSight(CVector* pvecStart, CVector* pvecEnd)
-{
-    LimitLinePoints(*pvecStart, *pvecEnd);
-}
-
-// Hook info
-#define HOOKPOS_CWorld_ProcessLineOfSight        0x56BA00
-#define HOOKSIZE_CWorld_ProcessLineOfSight       12
-DWORD RETURN_CWorld_ProcessLineOfSight = 0x56BA0C;
-void _declspec(naked) HOOK_CWorld_ProcessLineOfSight()
-{
-    _asm
-    {
-        pushad
-        push    [esp+32+4*2]
-        push    [esp+32+4*2]
-        call    OnCWorld_ProcessLineOfSight
-        add     esp, 4*2
-        popad
-
-        sub     esp, 60h
-        cmp     word ptr ds:[0B7CD78h], 0FFFFh
-        jmp     RETURN_CWorld_ProcessLineOfSight
-    }
-}
-
-////////////////////////////////////////////////////////////////
-//
 // CWorld_GetIsLineOfSightClear
 //
 // Ensure position args in range
@@ -108,6 +75,5 @@ void _declspec(naked) HOOK_CWorld_GetIsLineOfSightClear()
 //////////////////////////////////////////////////////////////////////////////////////////
 void CMultiplayerSA::InitHooks_FixLineOfSightArgs()
 {
-    EZHookInstall(CWorld_ProcessLineOfSight);
     EZHookInstall(CWorld_GetIsLineOfSightClear);
 }

@@ -42,6 +42,8 @@ static_assert(sizeof(CColBoxSA) == 0x1C, "Invalid size for CColBoxSA");
 
 struct CColLineSA
 {
+    CColLineSA(const CVector& start, const CVector& end) : m_vecStart{start}, m_vecStop{end} {};
+
     CVector m_vecStart;
     float   m_startSize;
     CVector m_vecStop;
