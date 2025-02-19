@@ -19,6 +19,12 @@ CClientTXD::CClientTXD(class CClientManager* pManager, ElementID ID) : ClassInit
 
 CClientTXD::~CClientTXD()
 {
+    if (!m_unloaded)
+        Unlink();
+}
+
+void CClientTXD::Unlink()
+{
     // Remove us from all the models
     g_pGame->GetRenderWare()->ModelInfoTXDRemoveTextures(&m_ReplacementTextures);
 
@@ -30,6 +36,8 @@ CClientTXD::~CClientTXD()
 
     // Remove us from all the clothes replacement doo dah
     g_pGame->GetRenderWare()->ClothesRemoveReplacement(m_FileData.data());
+
+    m_unloaded = true;
 }
 
 bool CClientTXD::Load(bool isRaw, SString input, bool enableFiltering)

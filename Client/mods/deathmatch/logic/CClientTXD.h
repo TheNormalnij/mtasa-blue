@@ -21,7 +21,7 @@ public:
     CClientTXD(class CClientManager* pManager, ElementID ID);
     ~CClientTXD();
 
-    void Unlink(){};
+    void Unlink() override;
     void GetPosition(CVector& vecPosition) const {};
     void SetPosition(const CVector& vecPosition){};
 
@@ -42,6 +42,7 @@ private:
     bool                 m_bFilteringEnabled;
     bool                 m_bIsRawData;
     bool                 m_bUsingFileDataForClothes;
+    bool                 m_unloaded;
     SString              m_FileData;
     SReplacementTextures m_ReplacementTextures;
 };
